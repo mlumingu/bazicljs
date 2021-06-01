@@ -15,3 +15,6 @@
 # shadow-cljs cache, port files
 /.shadow-cljs/
 \#*
+.\#*
+.dir-locals.el
+package-lock.json

@@ -126,6 +126,10 @@
      (if b-qs ^{:key "1b"} [qi-legend "b" 1])
      (if h-qs ^{:key "1h"} [qi-legend "h" 1]))))
 
+(defn qi-hs [col i hs]
+  ^{:key (str col "hs" i)} [qi hs col]
+  )
+
 (defn qi-stage-pillar [ix [p s b j hss]]
   (let [i        (+ 2 ix)
         settings @(rf/subscribe [:settings])
@@ -133,13 +137,14 @@
         s-qs     (:Stem-qi-stage settings)
         b-qs     (:Branch-qi-stage settings)
         h-qs     (:Hstems-qi-stage settings)]
-    (list
-     ^{:key (str i p)} [qi-legend (name p) i]
-     (if j-qs ^{:key (str i "j")} [qi j i])
-     (if s-qs ^{:key (str i "s")} [qi s i])
-     (if b-qs ^{:key (str i "b")} [qi b i])
-     ;;(if h-qs ^{:key "1h"} [qi h i])
-     )))
+    (concat
+     (list
+      ^{:key (str i p)} [qi-legend (name p) i]
+      (if j-qs ^{:key (str i "j")} [qi j i])
+      (if s-qs ^{:key (str i "s")} [qi s i])
+      (if b-qs ^{:key (str i "b")} [qi b i]))
+     (if h-qs (map-indexed (partial qi-hs i) hss) ))
+    ))
 
 
 (defn qi-stage1 [stages row-start]

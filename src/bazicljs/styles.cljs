@@ -116,4 +116,5 @@
    :font-size     "x-small"
    :grid-auto-flow :column
    :justify-content :start
+   :align-content :start
    })
