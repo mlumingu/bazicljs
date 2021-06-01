@@ -33,7 +33,7 @@
 
 
 (defn rel [rtype ids idtype pairs? & {:keys [element] :or {element nil}}]
-  {:rtype rtype :ids ids :idtype idtype :pairs? false :element element})
+  {:rtype rtype :ids ids :idtype idtype :pairs? pairs? :element element})
 
 (def relations [(rel :clash #{0 6} :branch true)
                 (rel :clash #{1 7} :branch true)

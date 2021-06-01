@@ -38,10 +38,11 @@
         rids   (:ids relation)
         id-in-r (some #{id} rids)]
     (if id-in-r
-      (let [other-rids (remove-one id rids)
+      (let [other-rids (into #{} (remove-one id rids))
             matches (filter #(some #{(idtype %)} other-rids)  pillars)
             groups (group-by idtype matches)
-            full-relation? (= (count other-rids) (count groups))]
+            found-rids (into #{} (keys groups))
+            full-relation? (= found-rids other-rids)]
         (if full-relation?
           (relation-instances relation matches))
         )
@@ -274,6 +275,8 @@
 
                           (repeat :void) voids
                           (repeat :dm) (repeat (:stem dp))
+                          (repeat :n-pillars) (repeat n-pillars)
+                          (repeat :t-pillars) (repeat [])
                           )
         
         relations    (map (partial relations2 bu/relations n-pillars) l-pillars)
@@ -289,8 +292,10 @@
     ))
 
 
-(defn year-pillars [n-pillars l-pillar]
-  (let [l-start     (l-pillar :pstart)
+(defn year-pillars [l-pillar]
+  (let [n-pillars   (l-pillar :n-pillars)
+        nl-pillars  (conj n-pillars l-pillar)
+        l-start     (l-pillar :pstart)
         l-end       (l-pillar :pend)
         dp          (day-pillar n-pillars)
         years       (bc/year-pillars l-start l-end)
@@ -303,7 +308,6 @@
         branches    (map second pillars)
         jiazis      (map bu/jiazi-id pillars)        
         slugs       (map time/year start-dates)
-        nl-pillars  (conj n-pillars l-pillar)
         ids         (map #(ftime/unparse (ftime/formatter "yyyy-MM-dd") %) start-dates)
         voids       (map (partial bu/is-void? (:jiazi dp)) branches)
 
@@ -321,6 +325,8 @@
 
                          (repeat :void) voids
                          (repeat :dm) (repeat (:stem dp))
+                         (repeat :nl-pillars) (repeat nl-pillars)
+                         (repeat :t-pillars) (repeat [])
                          )
         
         relations  (map (partial relations2 bu/relations nl-pillars) y-pillars)
@@ -335,8 +341,9 @@
     (pillars-to-map y-pillars)
     ))
 
-(defn month-pillars [nl-pillars y-pillar]
-  (let [y-start     (y-pillar :pstart)
+(defn month-pillars [y-pillar]
+  (let [nl-pillars  (y-pillar :nl-pillars)
+        y-start     (y-pillar :pstart)
         y-end       (y-pillar :pend)
         dp          (day-pillar nl-pillars)
         months      (bc/month-pillars y-start y-end)
@@ -366,6 +373,8 @@
 
                          (repeat :void) voids
                          (repeat :dm) (repeat (:stem dp))
+                         (repeat :nl-pillars) (repeat nl-pillars)
+                         (repeat :t-pillars) (repeat [y-pillar])
                          )
         
         relations  (map (partial relations2 bu/relations nl-pillars) m-pillars)
@@ -380,8 +389,10 @@
     (pillars-to-map m-pillars)
     ))
 
-(defn day-pillars [nl-pillars m-pillar]
-  (let [m-start     (m-pillar :pstart)
+(defn day-pillars [m-pillar]
+  (let [nl-pillars  (m-pillar :nl-pillars)
+        t-pillars   (conj (m-pillar :t-pillars) m-pillar)
+        m-start     (m-pillar :pstart)
         m-end       (m-pillar :pend)
         dp          (day-pillar nl-pillars)
         days        (bc/day-pillars m-start m-end)
@@ -413,6 +424,8 @@
 
                          (repeat :void) voids
                          (repeat :dm) (repeat (:stem dp))
+                         (repeat :nl-pillars) (repeat nl-pillars)
+                         (repeat :t-pillars) (repeat t-pillars)
                          )
         
         relations  (map (partial relations2 bu/relations nl-pillars) pillars)
@@ -428,8 +441,10 @@
     ))
 
 
-(defn hour-pillars [nl-pillars d-pillar]
-  (let [d-start     (d-pillar :pstart)
+(defn hour-pillars [d-pillar]
+  (let [nl-pillars  (d-pillar :nl-pillars)
+        t-pillars   (conj (d-pillar :t-pillars) d-pillar)
+        d-start     (d-pillar :pstart)
         d-end       (d-pillar :pend)
         ds          (d-pillar :stem)
         dp          (day-pillar nl-pillars)
@@ -460,6 +475,8 @@
 
                          (repeat :void) voids
                          (repeat :dm) (repeat (:stem dp))
+                         (repeat :nl-pillars) (repeat nl-pillars)
+                         (repeat :t-pillars) (repeat t-pillars)
                          )
         
         relations  (map (partial relations2 bu/relations nl-pillars) pillars)

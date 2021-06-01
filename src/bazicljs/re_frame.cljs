@@ -106,13 +106,10 @@
                           :d {:h nil}
                           :h {})
          nested-pillars (case palace
-                          :l (b/year-pillars  n-pillars pillar)
-                          :y (b/month-pillars (conj n-pillars (get-in db [:selected-pillars :l]))
-                                              pillar)
-                          :m (b/day-pillars   (conj n-pillars (get-in db [:selected-pillars :l]))
-                                              pillar)
-                          :d (b/hour-pillars  (conj n-pillars (get-in db [:selected-pillars :l]))
-                                              pillar)
+                          :l (b/year-pillars pillar)
+                          :y (b/month-pillars pillar)
+                          :m (b/day-pillars pillar)
+                          :d (b/hour-pillars pillar)
                           :h nil)]
      (-> db
          (update-in [:chart] merge sub-palaces)         
