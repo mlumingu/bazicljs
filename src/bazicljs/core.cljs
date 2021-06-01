@@ -168,7 +168,8 @@
             [checkbox :Branch-qi-stage settings "Branch qi stage"]
             [checkbox :Hstems-qi-stage settings "Hidden stems qi stage"]]
            
-           [checkbox :Relations settings]
+           [checkbox :P-relations settings]
+           [checkbox :N-relations settings]
 
            [:div {:style {:display :flex :gap "0.2em" :align-items :baseline}}
             [:label {:for :palace-bg} "Palace background"]

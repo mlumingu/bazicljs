@@ -18,7 +18,8 @@
                                                                :Sha true
                                                                :Natal-qi-stages false
                                                                :Time-qi-stages false
-                                                               :Relations true
+                                                               :P-relations true
+                                                               :N-relations true
                                                                :palace-bg "element"
                                                                :Jiazi-qi-stage true
                                                                :Stem-qi-stage true

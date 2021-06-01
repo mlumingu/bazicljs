@@ -25,6 +25,7 @@
 (defclass pillars []
   {:display :grid
    :grid-auto-columns "7em"
+   :grid-auto-flow :column
    :justify-items :stretch
    :gap "0.2em 0.2em"
    :overflow-x :auto
@@ -39,8 +40,8 @@
 (defclass active []
   {:background-color :black :color :white})
 
-(defclass palace [row]
-  {:grid-row-start row
+(defclass palace [col]
+  {:grid-column-start col
    :position "relative"
    :font-size "2em"
    :color "black"
@@ -78,11 +79,22 @@
    :text-align :center
    })
 
-(defclass nayin [element]
+(defclass relations [col]
+  {:grid-column-start col
+   :font-size "small"
+   :display "flex"
+   :flex-direction "column"
+   :align-items "flex-start"
+   :gap "0.2em"
+   :background-color "lavender"
+   :padding "0.2em"
+   })
+
+(defclass nayin [element col]
   {:background-color (element-colors element)
    :color "black"
    :font-size "x-small"
-   :grid-row-start 5
+   :grid-column-start col
    :text-align :center
    :padding "0.2em 0em 0.2em 0em"
    })
@@ -109,8 +121,8 @@
    :background-color :lavender
    :color :black})
 
-(defclass qi-stages [row-start]
-  {:grid-row-start row-start
+(defclass qi-stages [col]
+  {:grid-column-start col
    :display "grid"
    :gap "0.3em 0.3em"
    :font-size     "x-small"

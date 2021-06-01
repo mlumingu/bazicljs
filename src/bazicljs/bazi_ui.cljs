@@ -26,24 +26,24 @@
     "usefull" (styles/usefull-color usefull)
     "none"    nil))
 
-(defn stem [{sid :stem dm :dm palace :palace}]
+(defn stem [{sid :stem dm :dm palace :palace} col]
   (let [element  (bu/stem-element sid)
         usefulls @(rf/subscribe [:usefull-elem])
         usefull  (usefulls element)
         bg-setting (:palace-bg @(rf/subscribe [:settings]))
         bg-style (palace-bg-style bg-setting element usefull)]
-    [:div {:class [(styles/palace 2) bg-style]}
+    [:div {:class [(styles/palace col) bg-style]}
      (bu/STEM-HTML sid)
      (if (not= palace :D)[:div {:class (styles/palace-god)} (bu/GOD-NAMES (bu/stem-god dm sid))])]))
 
 
-(defn branch [{bid :branch dm :dm void :void}]
+(defn branch [{bid :branch dm :dm void :void} col]
   (let [element (bu/branch-element bid)
         usefulls @(rf/subscribe [:usefull-elem])
         usefull (usefulls element)
         bg-setting (:palace-bg @(rf/subscribe [:settings]))
         bg-style (palace-bg-style bg-setting element usefull)]
-    [:div {:class [(styles/palace 3) bg-style]}
+    [:div {:class [(styles/palace col) bg-style]}
      (bu/BRANCH-HTML bid)
      [:div {:class (styles/palace-god)} (bu/GOD-NAMES (bu/branch-god dm bid))]
      (if void [:div {:class (styles/void)} "DE"])]))
@@ -60,11 +60,11 @@
      [:div {:class (styles/hs-god)} (bu/GOD-NAMES (bu/stem-god dm sid))]]))
 
 
-(defn hstems [{bid :branch dm :dm}]
+(defn hstems [{bid :branch dm :dm} col]
   (let [stems         (bu/HIDDEN-STEMS bid)
         order         (if (= (count stems) 3) [1 0 2] [0 1])
         indexed-stems (map vector order stems)]
-    [:div {:style {:grid-row-start 4
+    [:div {:style {:grid-column-start col
                    :display "flex "
                    :font-size "1.5em"
                    :justify-content :center
@@ -76,24 +76,26 @@
   (str (rest (str s))))
 
 
-(defn relations [{rels :relations}]
-  [:div {:style {:grid-row-start 6
-                 :font-size "small"
-                 :display "flex"
-                 :flex-direction "column"
-                 :align-items "flex-start"
-                 :gap "0.2em"
-                 :background-color "lavender"
-                 :padding "0.2em"
-                 }}
-   (for [[i {:keys [rtype palaces element]}] (map-indexed vector rels)]
-     ^{:key i}
-     [:div {:class (styles/relation (if element  (styles/element-colors element)))}
-      (str (name rtype) " " (string/join " " (map name palaces)))])]) 
+(defn relations [rels]
+  (for [[i {:keys [rtype palaces element]}] (map-indexed vector rels)]
+    ^{:key i}
+    [:div {:class (styles/relation (if element  (styles/element-colors element)))}
+     (str (name rtype) " " (string/join " " (map name palaces)))]))
+
+(defn n-relations [{ss :cshas rels :n-relations} col]
+  [:div {:class (styles/relations col)}
+   (concat
+    (relations rels)
+    (for [[i name] (map-indexed vector ss)]
+      ^{:key (str i "s")} [:div name]))
+   ])
+
+(defn p-relations [{rels :p-relations} col]
+  [:div {:class (styles/relations col)} (relations rels)])
 
 
-(defn shas [{ss :shas}]
-  [:div {:style {:grid-row-start 7
+(defn shas [{ss :shas} col]
+  [:div {:style {:grid-column-start col
                  :font-size "small"
                  :display "flex"
                  :flex-direction "column"
@@ -147,27 +149,16 @@
     ))
 
 
-(defn qi-stage1 [stages row-start]
-  (into [:div {:class (styles/qi-stages row-start)} (doall (apply concat (cons (qi-stage-legend) (map-indexed qi-stage-pillar stages))))]))
-
-(defn qi-stage [stages row-start]
-  [:div {:class (styles/qi-stages row-start)}
-   (for [[i [p s b j hss]] (map-indexed vector stages)]
-     
-     [:div {:style {:display "flex" :flex-direction "column" :gap "0.2em" :justify-content "flex-start" }}
-      ^{:key 0} [qi j]      
-      ^{:key 1} [qi s]
-      ^{:key 2} [qi b]
-      (for [[j hs] (map-indexed vector hss)] ^{:key (str i j)} [qi hs])
-      ])])
+(defn qi-stage1 [stages col]
+  (into [:div {:class (styles/qi-stages col)} (doall (apply concat (cons (qi-stage-legend) (map-indexed qi-stage-pillar stages))))]))
 
 
-(defn nayin [{jiazi :jiazi}]
+(defn nayin [{jiazi :jiazi} col]
   (let [{:keys [element description]} (bu/nayin (quot jiazi 2))]
-    [:div {:class (styles/nayin element)} description]))
+    [:div {:class (styles/nayin element col)} description]))
 
-(defn slug [{s :slug}]
-  [:div {:style {:grid-row-start 1
+(defn slug [{s :slug} col]
+  [:div {:style {:grid-column-start col
                  :background-color
                  "black"
                  :color "white"
@@ -175,39 +166,46 @@
    s])
 
 
-(defn selectable [func {:keys [palace id] :as p} grid-row]
-  [:div {:style {:grid-row grid-row}
+(defn selectable [func {:keys [palace id] :as p} col]
+  [:div {:style {:grid-column-start col}
          :on-click #(rf/dispatch [:select-pillar palace id])}
-   [func p]
+   [func p col]
    ])
 
 
-(defn pillar1 [add-select {slugg :slug sid :stem palace :palace id :id :as p}]
-  (let [settings @(rf/subscribe [:settings])]
+(defn pillar1 [add-select i {slugg :slug sid :stem palace :palace id :id :as p}]
+  (let [col      (+ i 1)
+        settings @(rf/subscribe [:settings])]
     (if sid
       [
-       ^{:key (str slugg 1)}(if add-select [selectable slug p 1] [slug p])
-       ^{:key (str slugg 2)}(if add-select [selectable stem p 2] [stem p])
-       ^{:key (str slugg 3)}(if add-select [selectable branch p 3] [branch p])
-       (if (:Hidden-stems settings) ^{:key (str slugg 4)} [hstems p])
-       (if (:Nayin settings) ^{:key (str slugg 5)} [nayin p])
-       (if (:Relations settings) ^{:key (str slugg 6)} [relations p])
-       (if (:Sha settings) ^{:key (str slugg 7)}[shas p])
-       (if (:Natal-qi-stages settings) ^{:key (str slugg 8)} [qi-stage1 (:qi-stages p) 8])
-       (if (:Time-qi-stages settings) ^{:key (str slugg 9)}  [qi-stage1 (:r-qi-stages p) 9])
+       ^{:key (str col "sl")}   (if add-select [selectable slug p col] [slug p col])
+       ^{:key (str col "st")}   (if add-select [selectable stem p col] [stem p col])
+       ^{:key (str col "br")} (if add-select [selectable branch p col] [branch p col])
+       (if (:Hidden-stems settings) ^{:key (str col "hs")} [hstems p col])
+       (if (:Nayin settings) ^{:key (str col "ny")} [nayin p col])
+       (if (:N-relations settings) ^{:key (str col "nr")} [n-relations p col])
+       (if (:P-relations settings) ^{:key (str col "pr")} [p-relations p col])
+       (if (:Sha settings) ^{:key (str col "sh")}[shas p col])
+       (if (:Natal-qi-stages settings) ^{:key (str col "nq")} [qi-stage1 (:qi-stages p) col])
+       (if (:Time-qi-stages settings) ^{:key (str col "tq")}  [qi-stage1 (:r-qi-stages p) col])
        ]
       
-      [^{:key (str slugg 1)} (if add-select [selectable slug p 1] [slug p])
-       ^{:key (str slugg 2)} (if add-select
-                               [:div {:style {:grid-row "2 / 10"
-                                              :background-color :grey}
-                                      :on-click #(rf/dispatch [:select-pillar palace id])}]
-                               [:div {:style {:grid-row "2 / 10"}}])])))
+      [^{:key (str col "sl")}  (if add-select [selectable slug p col] [slug p col])
+       ^{:key (str col "sl2")} (if add-select
+                                 [:div {:style {:grid-column-start col
+                                                :grid-row "2 / 4"
+                                                :background-color :grey}
+                                        :on-click #(rf/dispatch [:select-pillar palace id])}]
+                                 [:div {:style {:grid-column-start col
+                                                :grid-row "2 / 4"
+                                                :background-color :grey
+                                                :min-height "7em"
+                                                }}])])))
 
 
 (defn pillars1 [ps add-select]
   (let [settings @(rf/subscribe [:settings])]
-    (into [:div {:class (styles/pillars)}] cat (map (partial pillar1 add-select) ps)
+    (into [:div {:class (styles/pillars)}] cat (map-indexed (partial pillar1 add-select) ps)
           )))
 
 

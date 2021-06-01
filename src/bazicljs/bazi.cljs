@@ -191,6 +191,7 @@
   (into (sorted-map) (map #(vector (% :id) %) pillars)))
 
 
+
 (defn natal-pillars [date no-hour]
   (let [solar     (if no-hour (bc/gregorian-to-solar-ymd date) (bc/gregorian-to-solar date))
         stems     (take-nth 2 solar)
@@ -217,19 +218,39 @@
                        )
 
         dp        (if no-hour (first n-pillars) (second n-pillars))
-        shas      (calc-sha dp n-pillars bs/shas)
-        shas      (map hash-map (repeat :shas) shas)
         
-        relations (relations bu/natal-relations n-pillars)
-        relations (map hash-map (repeat :relations) relations)
-        qi-stages (map (partial pillars-stems-qi n-pillars) n-pillars)]
+        shas        (calc-sha dp n-pillars bs/shas)
+        n-rels      (relations bu/neg-relations n-pillars)
+        p-pair-rels (relations bu/pos-relations n-pillars)
+        p-hars      (relations bu/pos-harmonies n-pillars)
+        p-rels      (map concat p-pair-rels p-hars)
+        qi-stages   (map (partial pillars-stems-qi n-pillars) n-pillars)
+        all         (map hash-map
+                         (repeat :n-relations) n-rels
+                         (repeat :p-relations) p-rels
+                         (repeat :shas) shas
+                         (repeat :cshas) (repeat (list)))]
     
-    (mapv merge n-pillars relations qi-stages shas)))
+    (mapv merge n-pillars all qi-stages)))
 
 
 (defn day-pillar [n-pillars]
   (first (filter #(= (% :palace) :D) n-pillars)))
 
+(defn calc-sha-rel-qi [dp pillars t-pillars]
+  (let [n-rels      (map (partial relations2 bu/neg-relations pillars) t-pillars)
+        p-pair-rels (map (partial relations2 bu/pos-relations pillars) t-pillars)
+        p-hars      (map (partial relations2 bu/pos-harmonies pillars) t-pillars)
+        p-rels      (map concat p-pair-rels p-hars)
+        shas        (calc-sha dp t-pillars bs/shas)
+        cshas       (calc-sha dp t-pillars bs/cshas)
+        qi-stages   (map (partial pillars-stems-qi pillars) t-pillars)
+        all         (map hash-map
+                         (repeat :n-relations) n-rels
+                         (repeat :p-relations) p-rels
+                         (repeat :shas) shas
+                         (repeat :cshas) cshas)]
+    (map merge all qi-stages)))
 
 (defn luck-pillars [date is-male n-pillars]
   (let [dp           (day-pillar n-pillars)
@@ -276,20 +297,13 @@
                           (repeat :void) voids
                           (repeat :dm) (repeat (:stem dp))
                           (repeat :n-pillars) (repeat n-pillars)
-                          (repeat :t-pillars) (repeat [])
-                          )
-        
-        relations    (map (partial relations2 bu/relations n-pillars) l-pillars)
-        relations    (map hash-map (repeat :relations) relations)        
-        qi-stages    (map (partial pillars-stems-qi n-pillars) l-pillars)
+                          (repeat :t-pillars) (repeat []))
 
-        shas      (calc-sha dp l-pillars bs/shas)
-        shas      (map hash-map (repeat :shas) shas)
-
-        l-pillars    (map merge l-pillars relations qi-stages shas)]
+        sha-rels-qi  (calc-sha-rel-qi dp n-pillars l-pillars)
+        l-pillars    (map merge l-pillars sha-rels-qi)
+        ]
     
-    (pillars-to-map l-pillars)
-    ))
+    (pillars-to-map l-pillars)))
 
 
 (defn year-pillars [l-pillar]
@@ -328,16 +342,10 @@
                          (repeat :nl-pillars) (repeat nl-pillars)
                          (repeat :t-pillars) (repeat [])
                          )
-        
-        relations  (map (partial relations2 bu/relations nl-pillars) y-pillars)
-        relations  (map hash-map (repeat :relations) relations)        
-        qi-stages  (map (partial pillars-stems-qi nl-pillars) y-pillars)
 
-        shas      (calc-sha dp y-pillars bs/shas)
-        shas      (map hash-map (repeat :shas) shas)
-
-        y-pillars  (map merge y-pillars relations qi-stages shas)]
-    
+        sha-rels-qi  (calc-sha-rel-qi dp nl-pillars y-pillars)
+        y-pillars    (map merge y-pillars sha-rels-qi)
+        ]
     (pillars-to-map y-pillars)
     ))
 
@@ -376,18 +384,11 @@
                          (repeat :nl-pillars) (repeat nl-pillars)
                          (repeat :t-pillars) (repeat [y-pillar])
                          )
-        
-        relations  (map (partial relations2 bu/relations nl-pillars) m-pillars)
-        relations  (map hash-map (repeat :relations) relations)        
-        qi-stages  (map (partial pillars-stems-qi nl-pillars) m-pillars)
 
-        shas      (calc-sha dp m-pillars bs/shas)
-        shas      (map hash-map (repeat :shas) shas)
-        
-        m-pillars  (map merge m-pillars relations qi-stages shas)]
-    
-    (pillars-to-map m-pillars)
-    ))
+        sha-rels-qi  (calc-sha-rel-qi dp nl-pillars m-pillars)
+        m-pillars    (map merge m-pillars sha-rels-qi)
+        ]
+    (pillars-to-map m-pillars)))
 
 (defn day-pillars [m-pillar]
   (let [nl-pillars  (m-pillar :nl-pillars)
@@ -410,35 +411,29 @@
 
         slugs       (map #(ftime/unparse (ftime/formatter "M-d") %) start-dates)
         
-        pillars     (map hash-map
-                         (repeat :id) ids
-                         (repeat :stem) stems
-                         (repeat :branch) branches
-                         (repeat :jiazi) jiazis
-                         (repeat :slug) slugs
-                         (repeat :palace) (repeat :d)
-                         (repeat :start-date) start-dates
-                         (repeat :end-date) end-dates
-                         (repeat :pstart) pstart
-                         (repeat :pend) pend
+        d-pillars     (map hash-map
+                           (repeat :id) ids
+                           (repeat :stem) stems
+                           (repeat :branch) branches
+                           (repeat :jiazi) jiazis
+                           (repeat :slug) slugs
+                           (repeat :palace) (repeat :d)
+                           (repeat :start-date) start-dates
+                           (repeat :end-date) end-dates
+                           (repeat :pstart) pstart
+                           (repeat :pend) pend
 
-                         (repeat :void) voids
-                         (repeat :dm) (repeat (:stem dp))
-                         (repeat :nl-pillars) (repeat nl-pillars)
-                         (repeat :t-pillars) (repeat t-pillars)
-                         )
-        
-        relations  (map (partial relations2 bu/relations nl-pillars) pillars)
-        relations  (map hash-map (repeat :relations) relations)        
-        qi-stages  (map (partial pillars-stems-qi nl-pillars) pillars)
+                           (repeat :void) voids
+                           (repeat :dm) (repeat (:stem dp))
+                           (repeat :nl-pillars) (repeat nl-pillars)
+                           (repeat :t-pillars) (repeat t-pillars)
+                           )
 
-        shas      (calc-sha dp pillars bs/shas)
-        shas      (map hash-map (repeat :shas) shas)
-        
-        pillars  (map merge pillars relations qi-stages shas)]
+        sha-rels-qi  (calc-sha-rel-qi dp nl-pillars d-pillars)
+        d-pillars    (map merge d-pillars sha-rels-qi)
+        ]
     
-    (pillars-to-map pillars)
-    ))
+    (pillars-to-map d-pillars)))
 
 
 (defn hour-pillars [d-pillar]
@@ -461,7 +456,7 @@
         ids         (map #(ftime/unparse (ftime/formatter "yyyy-MM-dd HH:mm") %) start-dates)
         voids       (map (partial bu/is-void? (:jiazi dp)) branches)
         
-        pillars     (map hash-map
+        h-pillars   (map hash-map
                          (repeat :id) ids
                          (repeat :stem) stems
                          (repeat :branch) branches
@@ -478,17 +473,11 @@
                          (repeat :nl-pillars) (repeat nl-pillars)
                          (repeat :t-pillars) (repeat t-pillars)
                          )
-        
-        relations  (map (partial relations2 bu/relations nl-pillars) pillars)
-        relations  (map hash-map (repeat :relations) relations)        
-        qi-stages  (map (partial pillars-stems-qi nl-pillars) pillars)
 
-        shas      (calc-sha dp pillars bs/shas)
-        shas      (map hash-map (repeat :shas) shas)
-        
-        pillars  (map merge pillars relations qi-stages shas)]
-    
-    (pillars-to-map pillars)
+        sha-rels-qi  (calc-sha-rel-qi dp nl-pillars h-pillars)
+        h-pillars    (map merge h-pillars sha-rels-qi)
+        ]
+    (pillars-to-map h-pillars)
     ))
 
 
