@@ -193,6 +193,7 @@
     [(+ p r) (* 0.7 (+ o w i))]
     ))
 
+
 (defn usefull-elem [[s-score w-score] dm]
   (let [elem (- 5 (quot dm 2))
         usefull-factors (if (< s-score w-score)

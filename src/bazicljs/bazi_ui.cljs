@@ -222,12 +222,13 @@
 
 
 (defn score [scs]
-  (let [sorted-scs (reverse (sort-by #(nth % 1) scs))]
+  (let [sorted-scs (reverse (sort-by #(nth % 2) scs))]
     [:table {:style {:margin-right "3em"}}
      [:tbody
-      (for [[name s ns] sorted-scs]
+      (for [[stem name s ns] scs]
         ^{:key name}
         [:tr
+         [:td stem]
          [:td name]
          [:td (str (.toFixed ns 1) "%")]
          [:td (str "(" (.toFixed s 0) ")")]
@@ -235,12 +236,17 @@
         )]]))
 
 
-(defn scores [{g-scores :god-scores e-scores :elem-scores sw-scores :strong-weak-scores}]
-  [:div {:style {:display "flex" :align-items :start}}
-   [score (map list bu/GOD-NAMES g-scores (norm-scores g-scores))]
-   [score (map list bu/FACTOR-NAMES e-scores (norm-scores e-scores))]
-   [score (map list ["Supporting" "Weakening"] sw-scores (norm-scores sw-scores))]
-   ])
+(defn scores [{dm :dm g-scores :god-scores e-scores :elem-scores sw-scores :strong-weak-scores}]
+  (let [[u uu] (sort-by #(nth % 1) (map list ["Supporting" "Weakening"] sw-scores (norm-scores sw-scores)))
+        u      (cons "Useful" u)
+        uu     (cons "Unuseful" uu)
+        sw-sc  (list u uu)
+        ]
+    [:div {:style {:display "flex" :align-items :start}}
+     [score (map list bu/STEM-HTML bu/GOD-NAMES g-scores (norm-scores g-scores))]
+     [score (map list bu/ELEMENT-NAMES bu/FACTOR-NAMES e-scores (norm-scores e-scores))]
+     [score sw-sc]
+     ]))
 
 
 (defn selected-pillars []

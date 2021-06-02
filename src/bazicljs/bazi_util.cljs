@@ -135,6 +135,10 @@
   (map #(stem-god dm %) (range 10)))
 
 
+(defn god-stems [dm]
+  (map second (sort-by first (map vector (stem-gods dm) (range 10)))))
+
+
 (defn branch-god [daymaster branch]
   (let [stem (STEM-FROM-BRANCH branch)]
     (stem-god daymaster stem)))
