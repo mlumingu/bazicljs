@@ -139,21 +139,22 @@
   ^{:key (str col "hs" i)} [qi hs col]
   )
 
-(defn qi-stage-pillar [ix [p s b j hss]]
-  (let [i        (+ 2 ix)
-        settings @(rf/subscribe [:settings])
-        j-qs     (:Jiazi-qi-stage settings)
-        s-qs     (:Stem-qi-stage settings)
-        b-qs     (:Branch-qi-stage settings)
-        h-qs     (:Hstems-qi-stage settings)]
-    (concat
-     (list
-      ^{:key (str i p)} [qi-legend (name p) i]
-      (if j-qs ^{:key (str i "j")} [qi j i])
-      (if s-qs ^{:key (str i "s")} [qi s i])
-      (if b-qs ^{:key (str i "b")} [qi b i]))
-     (if h-qs (map-indexed (partial qi-hs i) hss) ))
-    ))
+(defn qi-stage-pillar [ix [p s b j hss :as plr]]
+  (if plr
+    (let [i        (+ 2 ix)
+          settings @(rf/subscribe [:settings])
+          j-qs     (:Jiazi-qi-stage settings)
+          s-qs     (:Stem-qi-stage settings)
+          b-qs     (:Branch-qi-stage settings)
+          h-qs     (:Hstems-qi-stage settings)]
+      (concat
+       (list
+        ^{:key (str i p)} [qi-legend (name p) i]
+        (if j-qs ^{:key (str i "j")} [qi j i])
+        (if s-qs ^{:key (str i "s")} [qi s i])
+        (if b-qs ^{:key (str i "b")} [qi b i]))
+       (if h-qs (map-indexed (partial qi-hs i) hss) ))
+      )))
 
 
 (defn qi-stage1 [stages col]
@@ -174,11 +175,18 @@
 
 
 (defn selectable [func {:keys [palace id] :as p} col]
-  [:div {:style {:grid-column-start col}
+  [:div {:style {:grid-column-start col :cursor :pointer}
          :on-click #(rf/dispatch [:select-pillar palace id])}
    [func p col]
    ])
 
+(defn empty-luck [p col]
+  [:div {:style {:grid-column-start col
+                 :grid-row "2 / 4"
+                 :background-color :grey
+                 :min-height "2em"
+                 :height "100%"
+                 }}])
 
 (defn pillar1 [add-select i {slugg :slug sid :stem palace :palace id :id :as p}]
   (let [col      (+ i 1)
@@ -198,16 +206,7 @@
        ]
       
       [^{:key (str col "sl")}  (if add-select [selectable slug p col] [slug p col])
-       ^{:key (str col "sl2")} (if add-select
-                                 [:div {:style {:grid-column-start col
-                                                :grid-row "2 / 4"
-                                                :background-color :grey}
-                                        :on-click #(rf/dispatch [:select-pillar palace id])}]
-                                 [:div {:style {:grid-column-start col
-                                                :grid-row "2 / 4"
-                                                :background-color :grey
-                                                :min-height "7em"
-                                                }}])])))
+       ^{:key (str col "sl2")} (if add-select [selectable empty-luck p col] [empty-luck p col])])))
 
 
 (defn pillars1 [ps add-select]
