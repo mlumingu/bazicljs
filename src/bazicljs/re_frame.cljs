@@ -21,11 +21,11 @@
                                                                :P-relations true
                                                                :N-relations true
                                                                :palace-bg "element"
-                                                               :Jiazi-qi-stage true
+                                                               :Jiazi-qi-stage false
                                                                :Stem-qi-stage true
-                                                               :Branch-qi-stage true
-                                                               :Hstems-qi-stage true}}
-    }))
+                                                               :Branch-qi-stage false
+                                                               :Hstems-qi-stage true
+                                                               :Pillar-qi false}}}))
 
 (rf/reg-sub
  :calendar-loaded?

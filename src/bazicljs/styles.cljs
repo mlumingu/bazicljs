@@ -57,6 +57,13 @@
    :font-size "0.4em"
    :color "black"})
 
+(defclass palace-qi []
+  {:position "absolute"
+   :top "0em"
+   :left "0.1em"
+   :font-size "0.4em"
+   :color "black"})
+
 (defclass void []
   {:position "absolute"
    :bottom "0.2em"
@@ -118,7 +125,7 @@
    :text-align "center"
    :padding-top "0.2em"
    :padding-bottom "0.2em"
-   :background-color :lavender
+   :background-color :lightsteelblue
    :color :black})
 
 (defclass qi-stages [col]
@@ -129,4 +136,5 @@
    :grid-auto-flow :column
    :justify-content :start
    :align-content :start
+   :background-color :lavender
    })

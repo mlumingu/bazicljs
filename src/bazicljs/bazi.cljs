@@ -190,6 +190,8 @@
 (defn pillars-to-map [pillars]
   (into (sorted-map) (map #(vector (% :id) %) pillars)))
 
+(defn pillars-qi [pillars]
+  (for [p pillars] (into [] (rest (stems-qi false p p)))))
 
 
 (defn natal-pillars [date no-hour]
@@ -218,7 +220,8 @@
                        )
 
         dp        (if no-hour (first n-pillars) (second n-pillars))
-        
+
+        plrs-qi     (pillars-qi n-pillars)
         shas        (calc-sha dp n-pillars bs/shas)
         n-rels      (relations bu/neg-relations n-pillars)
         p-pair-rels (relations bu/pos-relations n-pillars)
@@ -226,6 +229,7 @@
         p-rels      (map concat p-pair-rels p-hars)
         qi-stages   (map (partial pillars-stems-qi n-pillars) n-pillars)
         all         (map hash-map
+                         (repeat :pillar-qi) plrs-qi
                          (repeat :n-relations) n-rels
                          (repeat :p-relations) p-rels
                          (repeat :shas) shas
@@ -245,7 +249,9 @@
         shas        (calc-sha dp t-pillars bs/shas)
         cshas       (calc-sha dp t-pillars bs/cshas)
         qi-stages   (map (partial pillars-stems-qi pillars) t-pillars)
+        t-plrs-qi   (pillars-qi t-pillars)
         all         (map hash-map
+                         (repeat :pillar-qi)  t-plrs-qi
                          (repeat :n-relations) n-rels
                          (repeat :p-relations) p-rels
                          (repeat :shas) shas

@@ -8,7 +8,7 @@
 
 ;;branch
 (def clash-b-0
-  ["Emotional Branch"    :Shen :Si :Yin :Hai :Shen :Si :Yin :Hai :Shen :Si :Yin :Hai])
+  ["Emotion Branch"    :Shen :Si :Yin :Hai :Shen :Si :Yin :Hai :Shen :Si :Yin :Hai])
 
 ;;branch
 (def sha-b1-0
@@ -33,7 +33,7 @@
 
 ;;branch, palace important
 (def sha-b2-0
-  ["General Star"        :Zi    :You   :Wu     :Mao    :Zi    :You    :Wu    :Mao     :Zi     :You    :Wu    :Mao 
+  ["General Star"        :Zi    :You   :Wu     :Mao    :Zi    :You    :Wu    :Mao     :Zi     :You    :Zi    :Mao 
    "Travelling Horse"    :Yin   :Hai   :Shen   :Si     :Yin   :Hai   :Shen    :Si     :Yin    :Hai   :Shen    :Si
    "Imperial Canopy"     :Chen  :Chou   :Xu     :Wei   :Chen   :Chou   :Xu    :Wei    :Chen   :Chou    :Xu    :Wei 
    "Separate Edge"       :Yin  :Mao    :Chen   :Si     :Wu    :Wei   :Shen   :You     :Xu     :Hai    :Zi    :Chou 

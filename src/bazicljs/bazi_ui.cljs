@@ -26,15 +26,17 @@
     "usefull" (styles/usefull-color usefull)
     "none"    nil))
 
-(defn stem [{sid :stem dm :dm palace :palace} col]
+(defn stem [{sid :stem dm :dm palace :palace {[st-qi x] 0} :pillar-qi} col]
   (let [element  (bu/stem-element sid)
         usefulls @(rf/subscribe [:usefull-elem])
         usefull  (usefulls element)
         bg-setting (:palace-bg @(rf/subscribe [:settings]))
+        pillar-qi  (:Pillar-qi @(rf/subscribe [:settings]))
         bg-style (palace-bg-style bg-setting element usefull)]
     [:div {:class [(styles/palace col) bg-style]}
      (bu/STEM-HTML sid)
-     (if (not= palace :D)[:div {:class (styles/palace-god)} (bu/GOD-NAMES (bu/stem-god dm sid))])]))
+     (if (not= palace :D)[:div {:class (styles/palace-god)} (bu/GOD-NAMES (bu/stem-god dm sid))])
+     (if pillar-qi [:div {:class (styles/palace-qi)} st-qi])]))
 
 
 (defn branch [{bid :branch dm :dm void :void} col]
@@ -49,27 +51,32 @@
      (if void [:div {:class (styles/void)} "DE"])]))
 
 
-(defn hstem [sid order dm]
+(defn hstem [sid order dm qi]
   (let [element (bu/stem-element sid)
         usefulls @(rf/subscribe [:usefull-elem])
         usefull (usefulls element)
         bg-setting (:palace-bg @(rf/subscribe [:settings]))
         bg-style (palace-bg-style bg-setting element usefull)
-        shtml (bu/STEM-HTML sid)]
+        shtml (bu/STEM-HTML sid)
+        pillar-qi  (:Pillar-qi @(rf/subscribe [:settings]))]
     [:div {:class [(styles/hstem order) bg-style]} shtml
-     [:div {:class (styles/hs-god)} (bu/GOD-NAMES (bu/stem-god dm sid))]]))
+     [:div {:class (styles/hs-god)} (bu/GOD-NAMES (bu/stem-god dm sid))]
+     (if pillar-qi [:div {:class (styles/hs-god)} qi])]))
 
 
-(defn hstems [{bid :branch dm :dm} col]
+(defn hstems [{bid :branch dm :dm {hss-qi 3} :pillar-qi} col]
   (let [stems         (bu/HIDDEN-STEMS bid)
         order         (if (= (count stems) 3) [1 0 2] [0 1])
-        indexed-stems (map vector order stems)]
+        qis           (map first hss-qi)
+        indexed-stems (map vector order stems qis)
+        ]
     [:div {:style {:grid-column-start col
                    :display "flex "
                    :font-size "1.5em"
                    :justify-content :center
                    :gap "0.2em"}}
-     (for [[i hs] indexed-stems] ^{:key i} [hstem hs i dm])]))
+     (for [[i hs qi] indexed-stems] ^{:key i} [hstem hs i dm qi])
+     ]))
 
 
 (defn symbol-str [s]
