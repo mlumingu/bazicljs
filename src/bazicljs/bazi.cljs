@@ -5,6 +5,7 @@
    [bazicljs.sha :as bs]
    [cljs-time.core :as time]
    [cljs-time.format :as ftime]
+   [clojure.set :as cs]
    ))
 
 (defn get-palace [pillars palace]
@@ -50,6 +51,31 @@
       )))
 
 
+
+(defn relation3 [pillar pillars relation]
+  (let [idtype (:idtype relation)
+        id     (idtype pillar)
+        rids   (:ids relation)
+        id-in-r (some #{id} rids)
+        ]
+    (if id-in-r
+      (let [other-rids (into #{} (remove-one id rids))
+            matches (filter #(some #{(idtype %)} rids)  pillars)
+            groups (group-by idtype matches)
+            found-rids (into #{} (keys groups))
+
+            full-relation (cs/subset? other-rids found-rids)
+            
+            all-pillars (cons pillar matches)
+            nl-pillars (filter #(some #{(:palace %)} bu/nl-palace-keys) all-pillars)
+            has-nl-ps (seq nl-pillars)]
+        (if (and  full-relation has-nl-ps)
+          (relation-instances relation matches))
+        )
+      ()
+      )))
+
+
 (defn separate-all [coll]
   (letfn [(separate-at [coll pos]
             (let [[a b] (split-at pos coll)]
@@ -59,6 +85,13 @@
 
 (defn relations2 [rels pillars pillar]
   (mapcat (partial relation pillar pillars) rels))
+
+(defn h-relations2 [rels pillars pillar]
+  (mapcat (partial relation3 pillar pillars) rels))
+
+(defn h-relations [relations pillars]
+  (for [[p ps] (separate-all pillars)]
+    (mapcat (partial relation3 p ps) relations)))
 
 
 (defn relations [relations pillars]
@@ -225,7 +258,7 @@
         shas        (calc-sha dp n-pillars bs/shas)
         n-rels      (relations bu/neg-relations n-pillars)
         p-pair-rels (relations bu/pos-relations n-pillars)
-        p-hars      (relations bu/pos-harmonies n-pillars)
+        p-hars      (h-relations bu/pos-harmonies n-pillars)
         p-rels      (map concat p-pair-rels p-hars)
         qi-stages   (map (partial pillars-stems-qi n-pillars) n-pillars)
         all         (map hash-map
@@ -241,10 +274,11 @@
 (defn day-pillar [n-pillars]
   (first (filter #(= (% :palace) :D) n-pillars)))
 
-(defn calc-sha-rel-qi [dp pillars t-pillars]
-  (let [n-rels      (map (partial relations2 bu/neg-relations pillars) t-pillars)
+(defn calc-sha-rel-qi [dp pillars t-pillars st-pillars]
+  (let [all-pillars (concat pillars st-pillars)
+        n-rels      (map (partial relations2 bu/neg-relations pillars) t-pillars)
         p-pair-rels (map (partial relations2 bu/pos-relations pillars) t-pillars)
-        p-hars      (map (partial relations2 bu/pos-harmonies pillars) t-pillars)
+        p-hars      (map (partial h-relations2 bu/pos-harmonies all-pillars) t-pillars)
         p-rels      (map concat p-pair-rels p-hars)
         shas        (calc-sha dp t-pillars bs/shas)
         cshas       (calc-sha dp t-pillars bs/cshas)
@@ -305,7 +339,7 @@
                           (repeat :n-pillars) (repeat n-pillars)
                           (repeat :t-pillars) (repeat []))
 
-        sha-rels-qi  (calc-sha-rel-qi dp n-pillars l-pillars)
+        sha-rels-qi  (calc-sha-rel-qi dp n-pillars l-pillars [])
         l-pillars    (map merge l-pillars sha-rels-qi)
         ]
     
@@ -349,7 +383,7 @@
                          (repeat :t-pillars) (repeat [])
                          )
 
-        sha-rels-qi  (calc-sha-rel-qi dp nl-pillars y-pillars)
+        sha-rels-qi  (calc-sha-rel-qi dp nl-pillars y-pillars [])
         y-pillars    (map merge y-pillars sha-rels-qi)
         ]
     (pillars-to-map y-pillars)
@@ -357,6 +391,7 @@
 
 (defn month-pillars [y-pillar]
   (let [nl-pillars  (y-pillar :nl-pillars)
+        st-pillars  [y-pillar]
         y-start     (y-pillar :pstart)
         y-end       (y-pillar :pend)
         dp          (day-pillar nl-pillars)
@@ -388,17 +423,17 @@
                          (repeat :void) voids
                          (repeat :dm) (repeat (:stem dp))
                          (repeat :nl-pillars) (repeat nl-pillars)
-                         (repeat :t-pillars) (repeat [y-pillar])
+                         (repeat :st-pillars) (repeat st-pillars)
                          )
 
-        sha-rels-qi  (calc-sha-rel-qi dp nl-pillars m-pillars)
+        sha-rels-qi  (calc-sha-rel-qi dp nl-pillars m-pillars st-pillars)
         m-pillars    (map merge m-pillars sha-rels-qi)
         ]
     (pillars-to-map m-pillars)))
 
 (defn day-pillars [m-pillar]
   (let [nl-pillars  (m-pillar :nl-pillars)
-        t-pillars   (conj (m-pillar :t-pillars) m-pillar)
+        st-pillars  (conj (m-pillar :st-pillars) m-pillar)
         m-start     (m-pillar :pstart)
         m-end       (m-pillar :pend)
         dp          (day-pillar nl-pillars)
@@ -432,10 +467,10 @@
                            (repeat :void) voids
                            (repeat :dm) (repeat (:stem dp))
                            (repeat :nl-pillars) (repeat nl-pillars)
-                           (repeat :t-pillars) (repeat t-pillars)
+                           (repeat :st-pillars) (repeat st-pillars)
                            )
 
-        sha-rels-qi  (calc-sha-rel-qi dp nl-pillars d-pillars)
+        sha-rels-qi  (calc-sha-rel-qi dp nl-pillars d-pillars st-pillars)
         d-pillars    (map merge d-pillars sha-rels-qi)
         ]
     
@@ -444,7 +479,8 @@
 
 (defn hour-pillars [d-pillar]
   (let [nl-pillars  (d-pillar :nl-pillars)
-        t-pillars   (conj (d-pillar :t-pillars) d-pillar)
+        st-pillars  (conj (d-pillar :st-pillars) d-pillar)
+
         d-start     (d-pillar :pstart)
         d-end       (d-pillar :pend)
         ds          (d-pillar :stem)
@@ -477,10 +513,10 @@
                          (repeat :void) voids
                          (repeat :dm) (repeat (:stem dp))
                          (repeat :nl-pillars) (repeat nl-pillars)
-                         (repeat :t-pillars) (repeat t-pillars)
+                         (repeat :st-pillars) (repeat st-pillars)
                          )
 
-        sha-rels-qi  (calc-sha-rel-qi dp nl-pillars h-pillars)
+        sha-rels-qi  (calc-sha-rel-qi dp nl-pillars h-pillars st-pillars)
         h-pillars    (map merge h-pillars sha-rels-qi)
         ]
     (pillars-to-map h-pillars)

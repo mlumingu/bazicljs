@@ -2,6 +2,7 @@
 
 (def pillar-types ["H" "D" "M" "Y" "l" "y" "m" "d" "h"])
 (def palace-keys [:H :D :M :Y :l :y :m :d :h])
+(def nl-palace-keys [:H :D :M :Y :l])
 
 (def STEM-NAMES ["Jia"  "Yi"  "Bing"  "Ding"  "Wu"  "Ji"  "Geng"  "Xin"  "Ren"  "Gui"])
 
