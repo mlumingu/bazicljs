@@ -138,6 +138,11 @@
 (defn god-stems [dm]
   (map second (sort-by first (map vector (stem-gods dm) (range 10)))))
 
+(defn factor-elements [dm]
+  (let [dm-elem (stem-element dm)
+        drops   (+ dm-elem 1)]
+    (take 5 (drop dm-elem (cycle (range 5))))))
+
 
 (defn branch-god [daymaster branch]
   (let [stem (STEM-FROM-BRANCH branch)]

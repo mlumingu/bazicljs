@@ -256,8 +256,9 @@
 
 (defn element-scores [{dm :dm e-scores :elem-scores}]
   (let [norm-score (norm-scores e-scores)
-        e-ids      (range 5)
+        e-ids      (bu/factor-elements dm)
         e-styles   (map styles/element-text-color e-ids)
+        e-names    (map bu/ELEMENT-NAMES e-ids)
 
         usefulls   @(rf/subscribe [:usefull-elem])
         usefullss  (map usefulls e-ids)
@@ -265,7 +266,7 @@
 
         rows       (map vector
                         e-scores norm-score
-                        bu/ELEMENT-NAMES e-styles
+                        e-names e-styles
                         bu/FACTOR-NAMES f-styles)
         sorted-rows (reverse (sort-by first rows))]
     [score sorted-rows]))
