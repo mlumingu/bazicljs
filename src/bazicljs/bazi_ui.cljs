@@ -178,21 +178,31 @@
 (defn empty-luck [p col]
   [:div {:class (styles/empty-luck col)}])
 
+(defn cond-select [add-select component pillar col]
+  (if add-select [selectable component pillar col] [component pillar col]))
+
 (defn pillar1 [add-select i {slugg :slug sid :stem palace :palace id :id :as p}]
   (let [col      (+ i 1)
         settings @(rf/subscribe [:settings])]
     (if sid
       [
-       ^{:key (str col "sl")}   (if add-select [selectable slug p col] [slug p col])
-       ^{:key (str col "st")}   (if add-select [selectable stem p col] [stem p col])
-       ^{:key (str col "br")} (if add-select [selectable branch p col] [branch p col])
-       (if (:Hidden-stems settings) ^{:key (str col "hs")} [hstems p col])
-       (if (:Nayin settings) ^{:key (str col "ny")} [nayin p col])
-       (if (:N-relations settings) ^{:key (str col "nr")} [n-relations p col])
-       (if (:P-relations settings) ^{:key (str col "pr")} [p-relations p col])
-       (if (:Sha settings) ^{:key (str col "sh")}[shas p col])
-       (if (:Natal-qi-stages settings) ^{:key (str col "nq")} [qi-stage1 (:qi-stages p) col])
-       (if (:Time-qi-stages settings) ^{:key (str col "tq")}  [qi-stage1 (:r-qi-stages p) col])
+       ^{:key (str col "sl")} [cond-select add-select slug p col]
+       ^{:key (str col "st")} [cond-select add-select stem p col]
+       ^{:key (str col "br")} [cond-select add-select branch p col]
+       (if (:Hidden-stems settings) ^{:key (str col "hs")}
+         [cond-select add-select hstems p col])
+       (if (:Nayin settings) ^{:key (str col "ny")}
+         [cond-select add-select nayin p col])
+       (if (:N-relations settings) ^{:key (str col "nr")}
+         [n-relations p col])
+       (if (:P-relations settings) ^{:key (str col "pr")}
+         [p-relations p col])
+       (if (:Sha settings) ^{:key (str col "sh")}
+         [shas p col])
+       (if (:Natal-qi-stages settings) ^{:key (str col "nq")}
+         [qi-stage1 (:qi-stages p) col])
+       (if (:Time-qi-stages settings) ^{:key (str col "tq")}
+         [qi-stage1 (:r-qi-stages p) col])
        ]
       
       [^{:key (str col "sl")}  (if add-select [selectable slug p col] [slug p col])

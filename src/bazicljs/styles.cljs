@@ -27,10 +27,10 @@
    (at-media {:max-width "700px"}
              [:body {:font-size "10px"}])
    (at-media {:min-width "700px" :max-width "1050px"}
-             [:body {:font-size "12px"}])
+             [:body {:font-size "14px"}])
    :body {:margin  "0.5em 0.1em 1em 0.2em"
           :padding "0em 0em 0em 0em"
-          :font-size "15px"
+          :font-size "16px"
           }])
 
 

@@ -102,13 +102,8 @@
 
 
 (defn date-picker []
-  (let [fields (r/atom {:gender "male"
-                        :year "1990"
-                        :month "9"
-                        :day "6"
-                        :hour "23"
-                        :minutes "10"
-                        :no-hour false})]
+  (let [fields (r/atom {:gender "male"} ;;{:gender "male" :year "1990" :month "9" :day "6" :hour "23" :minutes "10" :no-hour false}
+                       )]
     (fn []
       [:div {:style {:display :flex :gap "0.5em" :align-items :baseline :flex-wrap :wrap}} 
        [:label  "Date"]
