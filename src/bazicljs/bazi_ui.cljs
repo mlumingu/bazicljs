@@ -222,31 +222,72 @@
 
 
 (defn score [scs]
-  (let [sorted-scs (reverse (sort-by #(nth % 2) scs))]
-    [:table {:style {:margin-right "3em"}}
-     [:tbody
-      (for [[stem name s ns] scs]
-        ^{:key name}
-        [:tr
-         [:td stem]
-         [:td name]
-         [:td (str (.toFixed ns 1) "%")]
-         [:td (str "(" (.toFixed s 0) ")")]
-         ]
-        )]]))
+  [:table {:style {:margin-right "3em"}}
+   [:tbody
+    (for [[s ns n1 st1 n2 st2] scs]
+      ^{:key name}
+      [:tr
+       [:td  {:class st1} n1]
+       (if n2 [:td {:class st2} n2])
+       [:td (str (.toFixed ns 1) "%")]
+       [:td (str "(" (.toFixed s 0) ")")]
+       ]
+      )]])
 
+(map bu/STEM-NAMES (bu/god-stems 3))
+(defn god-scores [{dm :dm g-scores :god-scores}]
+  (let [norm-score  (norm-scores g-scores)
+        sids        (bu/god-stems dm)
+        e-ids       (map bu/stem-element sids)
+        stem-styles (map styles/element-text-color e-ids)
+        stem-names  (map bu/STEM-HTML sids)
 
-(defn scores [{dm :dm g-scores :god-scores e-scores :elem-scores sw-scores :strong-weak-scores}]
-  (let [[u uu] (sort-by #(nth % 1) (map list ["Supporting" "Weakening"] sw-scores (norm-scores sw-scores)))
-        u      (cons "Useful" u)
-        uu     (cons "Unuseful" uu)
-        sw-sc  (list u uu)
+        usefulls    @(rf/subscribe [:usefull-elem])
+        usefullss   (map usefulls e-ids)
+        god-styles  (map styles/useful-text-color usefullss)
+
+        rows        (map vector g-scores norm-score stem-names stem-styles bu/GOD-NAMES god-styles)
+        sorted-rows (reverse (sort-by first rows))
         ]
-    [:div {:style {:display "flex" :align-items :start}}
-     [score (map list bu/STEM-HTML bu/GOD-NAMES g-scores (norm-scores g-scores))]
-     [score (map list bu/ELEMENT-NAMES bu/FACTOR-NAMES e-scores (norm-scores e-scores))]
-     [score sw-sc]
-     ]))
+    [score sorted-rows])
+  )
+
+(defn element-scores [{dm :dm e-scores :elem-scores}]
+  (let [norm-score (norm-scores e-scores)
+        e-ids      (range 5)
+        e-styles   (map styles/element-text-color e-ids)
+
+        usefulls   @(rf/subscribe [:usefull-elem])
+        usefullss  (map usefulls e-ids)
+        f-styles   (map styles/useful-text-color usefullss)
+
+        rows       (map vector
+                        e-scores norm-score
+                        bu/ELEMENT-NAMES e-styles
+                        bu/FACTOR-NAMES f-styles)
+        sorted-rows (reverse (sort-by first rows))]
+    [score sorted-rows]))
+
+(defn useful-scores [{sw-scores :strong-weak-scores}]
+  (let [[s w]       sw-scores
+        norm-score (norm-scores sw-scores)
+        sw-names   ["Supporting" "Weakening"]
+        s-is-u     (< s w)
+        u-names    (if s-is-u ["Useful" "Unuseful"])
+        u          (if s-is-u [true false] [false true])
+        u-styles   (map styles/useful-text-color u)
+        rows       (map vector sw-scores norm-score sw-names u-styles)
+        sorted-rows (reverse (sort-by first rows))
+        ]
+    [score sorted-rows])
+  )
+
+(defn scores [p]
+  [:div {:style {:display "flex" :align-items :start}}
+   [god-scores p]
+   [element-scores p]
+   [useful-scores p]
+   ])
 
 
 (defn selected-pillars []

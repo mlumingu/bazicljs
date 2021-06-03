@@ -8,6 +8,7 @@
 
 (def element-colors ["yellowgreen" "tomato" "khaki" "lightgrey" "lightblue"])
 (def text-element-colors ["green" "red" "#ffc700" "grey" "royalblue"])
+(def text-useful-colors ["royalblue" "red"])
 
 (defclass element-color [element]
   {:background-color (element-colors element)})
@@ -15,6 +16,10 @@
 (defclass usefull-color [usefull]
   {:background-color (if usefull "lightblue" "lightsalmon")})
 
+(defclass element-text-color [element]
+  {:color (text-element-colors element)})
+(defclass useful-text-color [useful]
+  {:color (if useful "darkblue" "red")})
 
 
 (defglobal defaults
