@@ -2,6 +2,7 @@
   (:require-macros
    [garden.def :refer [defcssfn]])
   (:require
+   [garden.stylesheet :refer [at-media]]
    [spade.core   :refer [defglobal defclass]]
    [garden.units :refer [deg px]]
    [garden.color :refer [rgba]]))
@@ -27,8 +28,19 @@
 
 (defglobal defaults
   [:html {:font-family ["ubuntu" :sans-serif]}
+   (at-media {:max-width "700px"}
+             [:body {:font-size "10px"}])
+   (at-media {:min-width "700px" :max-width "1050px"}
+             [:body {:font-size "12px"}])
    :body {:margin  "0.5em 0.1em 1em 0.2em"
-          :padding "0em 0em 0em 0em"}])
+          :padding "0em 0em 0em 0em"
+          :font-size "15px"
+          }
+   ]
+  
+  )
+
+
 
 (defclass pillars []
   {:display :grid
@@ -76,7 +88,7 @@
   {:position "absolute"
    :bottom "0.2em"
    :left "0.2em"
-   :font-size "x-small"
+   :font-size "0.3em"
    :color "white"
    :background-color "black"
    :padding "0.1em"
@@ -96,7 +108,7 @@
 
 (defclass relations [col]
   {:grid-column-start col
-   :font-size "small"
+   :font-size "0.8em"
    :display "flex"
    :flex-direction "column"
    :align-items "flex-start"
@@ -106,11 +118,11 @@
    })
 
 (defclass palace-names []
-  {:font-size "small"})
+  {:font-size "0.4em"})
 
 (defclass sha [col]
   {:grid-column-start col
-   :font-size "small"
+   :font-size "0.8em"
    :display "flex"
    :flex-direction "column"
    :padding "0.2em"
@@ -121,7 +133,7 @@
 (defclass nayin [element col]
   {:background-color (element-colors element)
    :color "black"
-   :font-size "x-small"
+   :font-size "0.6em"
    :grid-column-start col
    :text-align :center
    :padding "0.2em 0em 0.2em 0em"
@@ -153,7 +165,7 @@
   {:grid-column-start col
    :display "grid"
    :gap "0.3em 0.3em"
-   :font-size     "x-small"
+   :font-size     "0.6em"
    :grid-auto-flow :column
    :justify-content :start
    :align-content :start

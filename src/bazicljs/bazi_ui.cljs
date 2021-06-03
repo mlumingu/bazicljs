@@ -99,7 +99,7 @@
      (str (name rtype) " " (string/join " " (map name palaces)))]))
 
 (defn n-relations [{ss :cshas rels :n-relations} col]
-  [:div {:class (styles/relations col)}
+  [:div {:class (styles/sha col)}
    (concat
     (relations rels)
     (for [[i name] (map-indexed vector ss)]
