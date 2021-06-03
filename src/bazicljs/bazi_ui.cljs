@@ -35,7 +35,7 @@
         s-names    (:Stem-branch-names @(rf/subscribe [:settings]))
         s-name     (bu/STEM-NAMES sid)
         bg-style (palace-bg-style bg-setting element usefull)]
-    [:div {:class [(styles/palace col) bg-style]}
+    [:div {:class [  (styles/palace col) bg-style]}
      (bu/STEM-HTML sid)
      (if s-names [:div {:class (styles/palace-names)} s-name])
      (if (not= palace :D)[:div {:class (styles/palace-god)} (bu/GOD-NAMES (bu/stem-god dm sid))])
@@ -79,11 +79,7 @@
         qis           (map first hss-qi)
         indexed-stems (map vector order stems qis)
         ]
-    [:div {:style {:grid-column-start col
-                   :display "flex "
-                   :font-size "1.5em"
-                   :justify-content :center
-                   :gap "0.2em"}}
+    [:div {:class (styles/hstems col)}
      (for [[i hs qi] indexed-stems] ^{:key i} [hstem hs i dm qi])
      ]))
 
@@ -99,7 +95,7 @@
      (str (name rtype) " " (string/join " " (map name palaces)))]))
 
 (defn n-relations [{ss :cshas rels :n-relations} col]
-  [:div {:class (styles/sha col)}
+  [:div {:class [(styles/grid-base) (styles/sha col)]}
    (concat
     (relations rels)
     (for [[i name] (map-indexed vector ss)]
@@ -107,11 +103,11 @@
    ])
 
 (defn p-relations [{rels :p-relations} col]
-  [:div {:class (styles/relations col)} (relations rels)])
+  [:div {:class [(styles/grid-base)(styles/relations col)]} (relations rels)])
 
 
 (defn shas [{ss :shas} col]
-  [:div {:class (styles/sha col)}
+  [:div {:class [(styles/grid-base)(styles/sha col)]}
    (for [[i name] (map-indexed vector ss)]
      ^{:key i} [:div name])])
 
@@ -160,20 +156,15 @@
 
 
 (defn qi-stage1 [stages col]
-  (into [:div {:class (styles/qi-stages col)} (doall (apply concat (cons (qi-stage-legend) (map-indexed qi-stage-pillar stages))))]))
+  (into [:div {:class [(styles/grid-base) (styles/qi-stages col)]} (doall (apply concat (cons (qi-stage-legend) (map-indexed qi-stage-pillar stages))))]))
 
 
 (defn nayin [{jiazi :jiazi} col]
   (let [{:keys [element description]} (bu/nayin (quot jiazi 2))]
-    [:div {:class (styles/nayin element col)} description]))
+    [:div {:class [(styles/grid-base) (styles/nayin element col)]} description]))
 
 (defn slug [{s :slug} col]
-  [:div {:style {:grid-column-start col
-                 :background-color
-                 "black"
-                 :color "white"
-                 :text-align :center}}
-   s])
+  [:div {:class (styles/slug col)} s])
 
 
 (defn selectable [func {:keys [palace id] :as p} col]
@@ -183,12 +174,7 @@
    ])
 
 (defn empty-luck [p col]
-  [:div {:style {:grid-column-start col
-                 :grid-row "2 / 4"
-                 :background-color :grey
-                 :min-height "2em"
-                 :height "100%"
-                 }}])
+  [:div {:class (styles/empty-luck col)}])
 
 (defn pillar1 [add-select i {slugg :slug sid :stem palace :palace id :id :as p}]
   (let [col      (+ i 1)
@@ -314,7 +300,7 @@
         ymdh-tab    (contains? #{:y :m :d :h} tab-name)
         disabled    (and ymdh-tab (not (tab-name @(rf/subscribe [:chart]))))
         ]
-    [:button {:class (if active (styles/active) "")
+    [:button {:class [ (if active (styles/active))]
               :disabled (if disabled true false )
               :on-click #(rf/dispatch [:tab-change tab-name])} text]
     ))
