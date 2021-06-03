@@ -150,28 +150,21 @@
             }]
    [:label {:for :nayin} (if display-name display-name name)]])
 
+(defn settings-spacer []
+  [:div {:style {:height "0.5em"}}])
+
 (defn settings-widget []
   (let [show (r/atom false)]
     (fn []
       (let [settings @(rf/subscribe [:settings])]
         (if @show
           [:div {:style {:display :flex :gap "0.2em" :align-items :baseline :flex-direction :column}}
-           [:button {:on-click #(reset! show false)} "Hide settings"]
-           [checkbox :Nayin settings]
-           [checkbox :Hidden-stems settings "Hidden stems"]
-           [checkbox :Sha settings]
-           [checkbox :Natal-qi-stages settings "Natal pillar qi stage"]
-           [checkbox :Time-qi-stages settings "Time pillar qi stage"]
-           [:ul {:style {:margin-block "0em 0em"}}
-            [checkbox :Jiazi-qi-stage settings "Jiazi qi stage"]
-            [checkbox :Stem-qi-stage settings "Stem qi stage"]
-            [checkbox :Branch-qi-stage settings "Branch qi stage"]
-            [checkbox :Hstems-qi-stage settings "Hidden stems qi stage"]]
-           
-           [checkbox :P-relations settings "Positive relations"]
-           [checkbox :N-relations settings "Negative relations"]
-           [checkbox :Pillar-qi settings "Pillar qi stage"]
+           [:button {:on-click #(reset! show false)} "Hide options"]
 
+           [checkbox :Stem-branch-names settings "Stem and branch names"]
+           [checkbox :Hidden-stems settings "Hidden stems"]
+           [checkbox :Nayin settings]
+           [checkbox :Pillar-qi settings "Pillar qi stage"]
            [:div {:style {:display :flex :gap "0.2em" :align-items :baseline}}
             [:label {:for :palace-bg} "Palace background"]
             [:select {:id :palace-bg
@@ -179,10 +172,27 @@
                       :value (:palace-bg settings)
                       :on-change #(rf/dispatch [:set-settings :palace-bg (.. % -target -value)])}
              [:option {:value :element} "5 element"]
+             [:option {:value :usefull} "(Un)useful"]
              [:option {:value :none} "None"]
-             [:option {:value :usefull} "Usefull"]]]
+             ]]
+           [settings-spacer]
+           
+           [checkbox :N-relations settings "Negative relations"]
+           [checkbox :P-relations settings "Positive relations"]
+           [checkbox :Sha settings "Stars"]
+           [settings-spacer]
+
+           [checkbox :Natal-qi-stages settings "Natal pillar qi stage (time pillar as reference branch)"]
+           [checkbox :Time-qi-stages settings "Time pillar qi stage (natal pillar as reference branch)"]
+           [:ul {:style {:margin-block "0em 0em"}}
+            [checkbox :Jiazi-qi-stage settings "Jiazi qi stage"]
+            [checkbox :Stem-qi-stage settings "Stem qi stage"]
+            [checkbox :Branch-qi-stage settings "Branch qi stage"]
+            [checkbox :Hstems-qi-stage settings "Hidden stems qi stage"]]
+           [settings-spacer]
+           
            ]
-          [:button {:on-click #(reset! show true)} "Show settings"]
+          [:button {:on-click #(reset! show true)} "Show options"]
           )))))
 
 

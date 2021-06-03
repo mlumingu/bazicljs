@@ -24,7 +24,7 @@
   (case setting
     "element" (styles/element-color element)
     "usefull" (styles/usefull-color usefull)
-    "none"    nil))
+    "none"    (styles/none-palace)))
 
 (defn stem [{sid :stem dm :dm palace :palace {[st-qi x] 0} :pillar-qi} col]
   (let [element  (bu/stem-element sid)
@@ -32,9 +32,12 @@
         usefull  (usefulls element)
         bg-setting (:palace-bg @(rf/subscribe [:settings]))
         pillar-qi  (:Pillar-qi @(rf/subscribe [:settings]))
+        s-names    (:Stem-branch-names @(rf/subscribe [:settings]))
+        s-name     (bu/STEM-NAMES sid)
         bg-style (palace-bg-style bg-setting element usefull)]
     [:div {:class [(styles/palace col) bg-style]}
      (bu/STEM-HTML sid)
+     (if s-names [:div {:class (styles/palace-names)} s-name])
      (if (not= palace :D)[:div {:class (styles/palace-god)} (bu/GOD-NAMES (bu/stem-god dm sid))])
      (if pillar-qi [:div {:class (styles/palace-qi)} st-qi])]))
 
@@ -44,9 +47,12 @@
         usefulls @(rf/subscribe [:usefull-elem])
         usefull (usefulls element)
         bg-setting (:palace-bg @(rf/subscribe [:settings]))
+        b-names    (:Stem-branch-names @(rf/subscribe [:settings]))
+        b-name     (bu/BRANCH-NAMES bid)
         bg-style (palace-bg-style bg-setting element usefull)]
     [:div {:class [(styles/palace col) bg-style]}
      (bu/BRANCH-HTML bid)
+     (if b-names [:div {:class (styles/palace-names)} b-name])
      [:div {:class (styles/palace-god)} (bu/GOD-NAMES (bu/branch-god dm bid))]
      (if void [:div {:class (styles/void)} "DE"])]))
 
@@ -57,9 +63,12 @@
         usefull (usefulls element)
         bg-setting (:palace-bg @(rf/subscribe [:settings]))
         bg-style (palace-bg-style bg-setting element usefull)
+        s-names    (:Stem-branch-names @(rf/subscribe [:settings]))
+        s-name     (bu/STEM-NAMES sid)
         shtml (bu/STEM-HTML sid)
         pillar-qi  (:Pillar-qi @(rf/subscribe [:settings]))]
     [:div {:class [(styles/hstem order) bg-style]} shtml
+     (if s-names [:div {:class (styles/hs-god)} s-name])
      [:div {:class (styles/hs-god)} (bu/GOD-NAMES (bu/stem-god dm sid))]
      (if pillar-qi [:div {:class (styles/hs-god)} qi])]))
 
@@ -102,14 +111,7 @@
 
 
 (defn shas [{ss :shas} col]
-  [:div {:style {:grid-column-start col
-                 :font-size "small"
-                 :display "flex"
-                 :flex-direction "column"
-                 :padding "0.2em"
-                 :gap "0em"
-                 :background-color :lavender
-                 }}
+  [:div {:class (styles/sha col)}
    (for [[i name] (map-indexed vector ss)]
      ^{:key i} [:div name])])
 
@@ -225,7 +227,7 @@
   [:table {:style {:margin-right "3em"}}
    [:tbody
     (for [[s ns n1 st1 n2 st2] scs]
-      ^{:key name}
+      ^{:key n1}
       [:tr
        [:td  {:class st1} n1]
        (if n2 [:td {:class st2} n2])

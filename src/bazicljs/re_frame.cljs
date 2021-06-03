@@ -25,7 +25,8 @@
                                                                :Stem-qi-stage true
                                                                :Branch-qi-stage false
                                                                :Hstems-qi-stage true
-                                                               :Pillar-qi false}}}))
+                                                               :Pillar-qi false
+                                                               :Stem-branch-names false}}}))
 
 (rf/reg-sub
  :calendar-loaded?

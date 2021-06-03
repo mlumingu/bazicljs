@@ -21,6 +21,9 @@
 (defclass useful-text-color [useful]
   {:color (if useful "darkblue" "red")})
 
+(defclass none-palace []
+  {:border "solid 1px"})
+
 
 (defglobal defaults
   [:html {:font-family ["ubuntu" :sans-serif]}
@@ -100,6 +103,19 @@
    :gap "0.2em"
    :background-color "lavender"
    :padding "0.2em"
+   })
+
+(defclass palace-names []
+  {:font-size "small"})
+
+(defclass sha [col]
+  {:grid-column-start col
+   :font-size "small"
+   :display "flex"
+   :flex-direction "column"
+   :padding "0.2em"
+   :gap "0em"
+   :background-color :lavender
    })
 
 (defclass nayin [element col]
