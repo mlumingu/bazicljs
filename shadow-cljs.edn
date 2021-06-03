@@ -49,6 +49,32 @@
    {:build-options
     {:ns-aliases
      {day8.re-frame.tracing day8.re-frame.tracing-stubs}}}}
+
+  :rapp
+  {:target :browser
+   :output-dir "resources/bazi/js/compiled"
+   :asset-path "bazi/js/compiled"
+   :modules
+   {:app {:init-fn bazicljs.core/init}}
+   :devtools
+   {:preloads [day8.re-frame-10x.preload]}
+   :dev
+   {:compiler-options
+    {
+     :external-config
+     {:devtools/config
+      {:features-to-install    [:formatters :hints]
+       :fn-symbol              "F"
+       :print-config-overrides true}}
+     :closure-defines
+     {re-frame.trace.trace-enabled? true
+      day8.re-frame.tracing.trace-enabled? true
+      }}}
+   :release
+   {:build-options
+    {:ns-aliases
+     {day8.re-frame.tracing day8.re-frame.tracing-stubs}}}}
+  
   
   :browser-test
   {:target    :browser-test
