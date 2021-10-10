@@ -250,19 +250,18 @@
     (rdom/render [home] root-el)
     ))
 
-
 (defn uri-date-fields [qm]
   (let [date   (string/split (:date qm) "-")
         y      (get date 0)
         m      (get date 1)
         d      (get date 2)
         
-        time   (:time qm)
-        time-unknown (if (= time "false") true false)
-
-        time   (string/split time "-")
-        h      (if time-unknown "" (get time 0))
-        ms     (if time-unknown "" (get time 1))
+        time   (string/split (:time qm) "-")
+        h      (get time 0 "")
+        ms     (get time 1 "")
+        time-unknown (if (and (int? (js/parseInt h)) (int? (js/parseInt ms))) false true)
+        h      (if time-unknown "" h)
+        ms     (if time-unknown "" ms)
         
         gender (:gender qm)]
     {:year  y
