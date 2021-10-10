@@ -259,7 +259,7 @@
         shas        (calc-sha dp n-pillars bs/shas)
         n-rels      (relations bu/neg-relations n-pillars)
         p-pair-rels (relations bu/pos-relations n-pillars)
-        p-hars      (h-relations bu/pos-harmonies n-pillars)
+        p-hars      (h-relations bu/pos-natal-harmonies n-pillars)
         p-rels      (map concat p-pair-rels p-hars)
         qi-stages   (map (partial pillars-stems-qi n-pillars) n-pillars)
         all         (map hash-map
@@ -271,7 +271,7 @@
     
     (mapv merge n-pillars all qi-stages)))
 
-
+r
 (defn day-pillar [n-pillars]
   (first (filter #(= (% :palace) :D) n-pillars)))
 
