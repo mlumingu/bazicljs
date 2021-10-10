@@ -18,6 +18,7 @@
                 [cljs-http/cljs-http "0.1.46"]
                 [com.andrewmcveigh/cljs-time "0.5.2"]
                 [funcool/struct "1.4.0"]
+                [lambdaisland/uri "1.4.74"]
                 ]
 
  :dev-http

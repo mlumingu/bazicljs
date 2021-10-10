@@ -21,7 +21,14 @@
 
    [clojure.string :as string]
    [struct.core :as st]
+
+   [lambdaisland.uri :as uri]
+
+   [goog.string :as gstring]
+   [goog.string.format]
    ))
+
+(def url-path (:path (uri/uri (-> js/window .-location .-href))))
 
 (defn num-input [id placeholder width mx-length min max fields hour-field]
   [:input {:id id
@@ -31,10 +38,10 @@
            :maxLength mx-length
            :min min
            :max max
-           :disabled (if hour-field (:no-hour @fields) false)
-           :value (id @fields)
-           :on-change #(swap! fields
-                              assoc id (-> % .-target .-value))}])
+           :disabled (if hour-field (:time-unknown fields) false)
+           :value (id fields)
+           :on-change #(rf/dispatch [:set-date-fields id (.. % -target -value)])
+           }])
 
 (def date-schema [[:year
                    [st/required :message "Year is required"]
@@ -77,15 +84,15 @@
 
 
 (defn validate-input [fields]
-  (let [schema (if (:no-hour fields) date-schema datetime-schema)
-        parser (if (:no-hour fields) parse-date parse-datetime)
+  (let [schema (if (:time-unknown fields) date-schema datetime-schema)
+        parser (if (:time-unknown fields) parse-date parse-datetime)
         input-errors (st/validate fields schema)
         gender (:gender fields)]
     (if (not (first input-errors))
       (try
         [nil (-> fields
                  (assoc :date (parser fields))
-                 (assoc :pgender (if (= gender "male") true false))
+                 (assoc :pgender (if (= gender "m") true false))
                  )]
         (catch js/Error e [{:date (ex-message e)}])
         )
@@ -93,18 +100,47 @@
     ))
 
 
+(defn map->input-qs [fields]
+  (let [y (:year fields)
+        m (gstring/format "%02d" (:month fields))
+        d (gstring/format "%02d" (:day fields))
+        h (gstring/format "%02d" (:hour fields))
+        ms (gstring/format "%02d" (:minutes fields))
+        
+        date (str y "-" m "-" d)
+        time (str h "-" ms)
+
+        gender (:gender fields)
+
+        map (if (:time-unknown fields)
+              {:date date :time false :gender gender}
+              {:date date :time time :gender gender})
+        
+        uri (uri/map->query-string map)]
+    (str url-path "?" uri)
+    ))
+
 (defn calculate! [fields]
-  (let [[input-errors pfields] (validate-input @fields)]
+  (let [[input-errors pfields] (validate-input fields)]
     (if input-errors
       (js/alert (string/join "\n"  (vals input-errors)))
-      (rf/dispatch [:calculate (:date pfields) (:pgender pfields) (:no-hour pfields)]))
+      (do
+        (. (. js/window -history) pushState "" "new calculation" (map->input-qs fields))
+        (rf/dispatch [:calculate (:date pfields) (:pgender pfields) (:time-unknown pfields)])))
     ))
 
 
+(def log (.-log js/console))
+
+(defn handler [event]
+  (log "popstate")
+  )
+(.addEventListener js/window "popstate" handler)
+
+
 (defn date-picker []
-  (let [fields (r/atom {:gender "male"} ;;{:gender "male" :year "1990" :month "9" :day "6" :hour "23" :minutes "10" :no-hour false}
-                       )]
-    (fn []
+  (fn []
+    (let [fields @(rf/subscribe [:date-fields])] 
       [:div {:style {:display :flex :gap "0.5em" :align-items :baseline :flex-wrap :wrap}} 
        [:label  "Date"]
        [num-input :year "y" "3.5em" "4" "1600" "2200" fields]
@@ -113,23 +149,25 @@
        [:label "Time"]
        [num-input :hour "h" "2.7em" "2" "0" "23" fields true]
        [num-input :minutes "m" "2.7em" "2" "0" "59" fields true]
-       
-       [:label {:for "hour-unknown"} "Hour unknown"]
-       [:input {:id "hour-unknown"
+
+       [:label {:for "time-unknown"} "Time unknown"]
+       [:input {:id "time-unknown"
                 :type "checkbox"
-                :checked (:no-hour @fields)
+                :checked (:time-unknown fields false)
                 :on-change #(do
-                              (swap! fields assoc :hour "")
-                              (swap! fields assoc :minutes "")
-                              (swap! fields assoc :no-hour (.. % -target -checked)))}]
-       
+                              (rf/dispatch [:set-date-fields :time-unknown (.. % -target -checked)])
+                              (rf/dispatch [:set-date-fields :hour ""])
+                              (rf/dispatch [:set-date-fields :minutes ""]))}]
+
        [:label {:for "gender"} "Gender"]
        [:select {:id "gender"
                  :type "select"
-                 :value (:gender @fields)
-                 :on-change #(swap! fields assoc :gender (.. % -target -value))}
-        [:option {:value "male"} "male"]
-        [:option {:value "female"}"female"]]
+                 :value (:gender fields "m")
+                 :on-change #(rf/dispatch [:set-date-fields :gender (.. % -target -value)])
+                 }
+        [:option {:value "m"} "male"]
+        [:option {:value "f"} "female"]]
+
        
        [:input {:type :submit
                 :on-click #(calculate! fields)
@@ -143,7 +181,7 @@
             :checked (name settings)
             :on-change #(rf/dispatch [:set-settings name (.. % -target -checked)])
             }]
-   [:label {:for :nayin} (if display-name display-name name)]])
+   [:label {:for name} (if display-name display-name name)]])
 
 (defn settings-spacer []
   [:div {:style {:height "0.5em"}}])
@@ -212,15 +250,52 @@
     (rdom/render [home] root-el)
     ))
 
+
+(defn uri-date-fields [qm]
+  (let [date   (string/split (:date qm) "-")
+        y      (get date 0)
+        m      (get date 1)
+        d      (get date 2)
+        
+        time   (:time qm)
+        time-unknown (if (= time "false") true false)
+
+        time   (string/split time "-")
+        h      (if time-unknown "" (get time 0))
+        ms     (if time-unknown "" (get time 1))
+        
+        gender (:gender qm)]
+    {:year  y
+     :month m
+     :day   d
+     :hour  h
+     :minutes ms
+     :time-unknown time-unknown
+     :gender gender}
+    ))
+
+(def now-date-fields
+  (let [n (tc/time-now)]
+    {:year     (str (tc/year n))
+     :month    (str (tc/month n))
+     :day      (str (tc/day n))
+     :hour     (str (tc/hour n))
+     :minutes  (str (tc/minute n))
+     :time-unknown  false
+     :gender   "m"}))
+
 (defn init []
-  (dev-setup)
-  (rf/dispatch [:app/initialize])
-  (mount-root)
-  (go
-    (let [;;c (:body (<! (http/get "calendar.json")))
-          c2 (:body (<! (http/get "calendar2.json")))]
-      ;;(reset! cal/cal c)
-      (cal/loadcal! c2)
-      (rf/dispatch [:calendar-loaded])
-      (println "calendar loaded"))))
+  (let [uri-qm     (uri/query-map (-> js/window .-location .-href))
+        uri-fields (uri-date-fields uri-qm)]
+    (dev-setup)
+    (rf/dispatch [:app/initialize (if uri-qm uri-fields now-date-fields)])
+    (mount-root)
+    (go
+      (let [;;c (:body (<! (http/get "calendar.json")))
+            c2 (:body (<! (http/get "calendar2.json")))]
+        ;;(reset! cal/cal c)
+        (cal/loadcal! c2)
+        (rf/dispatch [:calendar-loaded])
+        (println "calendar loaded")
+        (calculate! (if uri-qm uri-fields now-date-fields))))))
 

@@ -10,28 +10,35 @@
    ))
 
 
+
+
 (rf/reg-event-fx
  :app/initialize
- (fn [_ _]
-   {:db {:calendar-loaded? true :current-tab :score :settings {:Nayin false
-                                                               :Hidden-stems true
-                                                               :Sha true
-                                                               :Natal-qi-stages false
-                                                               :Time-qi-stages false
-                                                               :P-relations true
-                                                               :N-relations true
-                                                               :palace-bg "element"
-                                                               :Jiazi-qi-stage false
-                                                               :Stem-qi-stage true
-                                                               :Branch-qi-stage false
-                                                               :Hstems-qi-stage true
-                                                               :Pillar-qi false
-                                                               :Stem-branch-names false}}}))
+ (fn [_ [_ date-fields]]
+   {:db {:calendar-loaded? true
+         :current-tab      :score
+         :settings         {:Nayin false
+                            :Hidden-stems true
+                            :Sha true
+                            :Natal-qi-stages false
+                            :Time-qi-stages false
+                            :P-relations true
+                            :N-relations true
+                            :palace-bg "element"
+                            :Jiazi-qi-stage false
+                            :Stem-qi-stage true
+                            :Branch-qi-stage false
+                            :Hstems-qi-stage true
+                            :Pillar-qi false
+                            :Stem-branch-names false}
+         :date-fields       date-fields
+         }}))
 
 (rf/reg-sub
  :calendar-loaded?
  (fn [db _]
    (:calendar-loaded? db)))
+
 
 (rf/reg-event-db
  :calendar-loaded
@@ -79,6 +86,20 @@
  :settings
  (fn [db _]
    (:settings db)))
+
+(rf/reg-event-db
+ :set-date-fields
+ (fn [db [_ name value]]
+   (assoc-in db
+             [:date-fields name] value)))
+
+
+(rf/reg-sub
+ :date-fields
+ (fn [db _]
+   (:date-fields db)))
+
+
 
 (rf/reg-event-db
  :calculate
