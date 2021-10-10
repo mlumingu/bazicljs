@@ -3,7 +3,7 @@
 	"scripts": {
 	        "watch-test": "npx shadow-cljs watch app browser-test karma-test",
 		"watch": "npx shadow-cljs watch app",            
-		"release": "npx shadow-cljs release app",
+		"release": "npx shadow-cljs release rapp",
 		"build-report": "npx shadow-cljs run shadow.cljs.build-report app target/build-report.html",
 		"ci": "npx shadow-cljs compile karma-test && npx karma start --single-run --reporters junit,dots"
 	},
