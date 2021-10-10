@@ -271,7 +271,7 @@
     
     (mapv merge n-pillars all qi-stages)))
 
-r
+
 (defn day-pillar [n-pillars]
   (first (filter #(= (% :palace) :D) n-pillars)))
 
