@@ -323,6 +323,7 @@
         current-tab @(rf/subscribe [:current-tab])]
     (case current-tab
       :score [scores chart]
+      :life  [pillars1 (:life-pillars chart) true]
       :l     [pillars1 (vals (:l chart)) true]
       :y     [pillars1 (vals (:y chart)) true]
       :m     [pillars1 (vals (:m chart)) true]
@@ -343,6 +344,7 @@
 
        [:div {:style {:display "flex" :gap "0.5em" :margin-top "1em" :margin-bottom "1em"}}
         ^{:key :score} [tab-button :score "Scores"]
+        ^{:key :life} [tab-button :life "Life pillars"]
         ^{:key :l} [tab-button :l "Luck pillars"]
         ^{:key :y} [tab-button :y "Year pillars"]
         ^{:key :m} [tab-button :m "Month pillars"]

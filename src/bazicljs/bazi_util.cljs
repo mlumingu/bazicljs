@@ -85,19 +85,22 @@
    (rel :d-combo #{8 9 10} :branch false :element 3)
    (rel :d-combo #{11 0 1} :branch false :element 4)])
 
-(def pos-relations
+(def s-combos
   [(rel :s-combo #{0 5} :stem true :element 2)
    (rel :s-combo #{1 6} :stem true :element 3)
    (rel :s-combo #{2 7} :stem true :element 4)
    (rel :s-combo #{3 8} :stem true :element 0)
-   (rel :s-combo #{4 9} :stem true :element 1)
+   (rel :s-combo #{4 9} :stem true :element 1)])
 
-   (rel :b-combo #{0 1} :branch true :element 2)
+(def b-combos
+  [(rel :b-combo #{0 1} :branch true :element 2)
    (rel :b-combo #{2 11} :branch true :element 0)
    (rel :b-combo #{3 10} :branch true :element 1)
    (rel :b-combo #{4 9} :branch true :element 3)
    (rel :b-combo #{5 8} :branch true :element 4)
    (rel :b-combo #{7 6} :branch true :element 1)])
+
+(def pos-relations (concat s-combos b-combos))
 
 (def pos-natal-harmonies (concat pos-harmonies
                                  [(rel :ls-cross #{0 6 9 3} :branch false)

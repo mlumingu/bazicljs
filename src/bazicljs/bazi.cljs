@@ -228,6 +228,7 @@
   (for [p pillars] (into [] (rest (stems-qi false p p)))))
 
 
+
 (defn natal-pillars [date no-hour]
   (let [solar     (if no-hour (bc/gregorian-to-solar-ymd date) (bc/gregorian-to-solar date))
         stems     (take-nth 2 solar)
@@ -275,6 +276,11 @@
 (defn day-pillar [n-pillars]
   (first (filter #(= (% :palace) :D) n-pillars)))
 
+
+(defn month-pillar [n-pillars]
+  (first (filter #(= (% :palace) :M) n-pillars)))
+
+
 (defn calc-sha-rel-qi [dp pillars t-pillars st-pillars]
   (let [all-pillars (concat pillars st-pillars)
         n-rels      (map (partial relations2 bu/neg-relations pillars) t-pillars)
@@ -292,6 +298,54 @@
                          (repeat :shas) shas
                          (repeat :cshas) cshas)]
     (map merge all qi-stages)))
+
+
+(defn ca-palace [{ds :stem db :branch}]
+  (let [s-combo (first (filter #(contains? % ds) (map :ids bu/s-combos)))
+        b-combo (first (filter #(contains? % db) (map :ids bu/b-combos)))
+        s (first (clojure.set/difference s-combo #{ds}))
+        b (first (clojure.set/difference b-combo #{db}))
+        ]
+    [s b]))
+
+
+(defn c-palace [{ms :stem mb :branch}]
+  (let [mp [ms mb]
+        ps (iterate bc/next-pillar mp)]
+    (nth ps 51)))
+
+
+(defn life-pillars [n-pillars]
+  (let [dp (day-pillar n-pillars)
+        mp (month-pillar n-pillars)
+
+        [cas cab] (ca-palace dp)
+        [cs cb]   (c-palace mp)
+
+        stems     [cs cas]
+        branches  [cb cab]
+        jiazis    (map bu/jiazi-id (jiazis stems branches))
+
+        voids     (map (partial bu/is-void? (:jiazi dp)) branches)
+
+        slugs     ["conception" "con aura"]
+        palaces   [:c :ca]
+
+        l-pillars (map hash-map
+                       (repeat :id)     palaces
+                       (repeat :stem)   stems
+                       (repeat :branch) branches
+                       (repeat :jiazi)  jiazis
+                       (repeat :slug)   slugs
+                       (repeat :palace) palaces
+                       (repeat :void)   voids
+                       (repeat :dm) (repeat (:stem dp))
+                       )
+
+        sha-rels-qi  (calc-sha-rel-qi dp n-pillars l-pillars [])
+        l-pillars    (map merge l-pillars sha-rels-qi)]
+    l-pillars))
+
 
 (defn luck-pillars [date is-male n-pillars]
   (let [dp           (day-pillar n-pillars)
@@ -341,6 +395,7 @@
                           (repeat :t-pillars) (repeat []))
 
         sha-rels-qi  (calc-sha-rel-qi dp n-pillars l-pillars [])
+        
         l-pillars    (map merge l-pillars sha-rels-qi)
         ]
     
@@ -526,6 +581,7 @@
 
 (defn chart [date is-male no-hour]
   (let [natal      (natal-pillars date no-hour)
+        life       (life-pillars natal)
         luck       (luck-pillars date is-male natal)
         g-scores   (god-scores natal)
         e-scores   (element-scores g-scores)
@@ -533,6 +589,7 @@
         dm         (:stem (day-pillar natal))
         usefull-elem (usefull-elem sw-scores dm)]
     {:natal-pillars natal
+     :life-pillars  life
      :l luck
      :y nil
      :m nil
@@ -567,5 +624,9 @@
 ;;(stem-scores nps)
 ;;(god-scores nps)
 ;;(strong-weak-scores (element-scores (god-scores nps)))
+;;nps
+;;(def dp (day-pillar nps))
+;;dp
+
 
 
