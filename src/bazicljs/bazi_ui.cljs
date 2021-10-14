@@ -165,6 +165,16 @@
   (let [{:keys [element description]} (bu/nayin (quot jiazi 2))]
     [:div {:class [(styles/grid-base) (styles/nayin element col)]} description]))
 
+(defn off-12-const-28 [{off-12 :off-12 const-28 :const-28 palace :palace weekday :weekday} col]
+  (if (contains? #{:d :D} palace)
+    (let [off-12-name   (bu/OFFICERS off-12)
+          const-28-name (bu/CONSTELLATIONS const-28)
+          weekday-name  (cal/WEEKDAYS weekday)]
+      [:div {:class [(styles/grid-base) (styles/off-12-const-28 col)]}
+       [:div weekday-name]
+       [:div (str (+ 1 off-12) " " off-12-name)]
+       [:div (str (+ 1 const-28) " " const-28-name)]])))
+
 (defn slug [{s :slug} col]
   [:div {:class (styles/slug col)} s])
 
@@ -203,6 +213,8 @@
          [qi-stage1 (:qi-stages p) col])
        (if (:Time-qi-stages settings) ^{:key (str col "tq")}
          [qi-stage1 (:r-qi-stages p) col])
+       (if (:Off-12-const-28 settings) ^{:key (str col "o12c28")}
+         [off-12-const-28 p col])
        ]
       
       [^{:key (str col "sl")}  (if add-select [selectable slug p col] [slug p col])

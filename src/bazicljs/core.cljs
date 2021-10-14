@@ -208,6 +208,7 @@
              [:option {:value :usefull} "(Un)useful"]
              [:option {:value :none} "None"]
              ]]
+           [checkbox :Off-12-const-28 settings "Weekday - 12 Officers - 28 Constellations (experimental)"]
            [settings-spacer]
            
            [checkbox :N-relations settings "Negative relations"]

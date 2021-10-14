@@ -103,7 +103,9 @@
    })
 
 
-
+(defclass off-12-const-28 [col]
+  {:grid-column-start col
+   :font-size "0.8em"})
 
 (defclass relations [col]
   {:grid-column-start col

@@ -10,7 +10,7 @@
    ))
 
 
-
+(def WEEKDAYS ["Monday" "Tuesday" "Wednesday" "Thursday" "Friday" "Saturday" "Sunday"])
 
 (def cal2 (atom nil))
 (def jiazi-offset (atom nil))
@@ -46,18 +46,25 @@
        (into (sorted-map-by compare-date))))
 
 
-(defn gen-days [first-dp m-start m-mid m1-const]
+(defn gen-days [first-dp m-start m-mid m1-const mbr]
   (let [end1   (time/plus (time/at-midnight m-start) (time/days 1))
         ends   (iterate #(time/plus % (time/days 1)) end1)
         starts (cons m-start ends)
         dps    (iterate next-pillar first-dp)
+        
         consts (iterate #(+ 1 %)  m1-const)
-        consts (map #(rem % 28) consts)]
+        consts (map #(rem % 28) consts)
+        
+        tw-ofs   (map #(- (second %) mbr) dps)
+        tw-ofs   (map #(rem (+ 12 %) 12) tw-ofs)
+        weekdays (map #(- (time/day-of-week %) 1) starts)]
     (map hash-map
          (repeat :start) starts
          (repeat :end) ends
          (repeat :dp) dps
-         (repeat :const) consts
+         (repeat :const-28) consts
+         (repeat :off-12) tw-ofs
+         (repeat :weekday) weekdays
          )))
 
 
@@ -75,7 +82,7 @@
         dst     (bu/jiazi-stem d-jz)
         dbr     (bu/jiazi-branch d-jz)
         
-        days    (gen-days [dst dbr] m-start m-mid m1-const)]
+        days    (gen-days [dst dbr] m-start m-mid m1-const mbr)]
     {:start m-start
      :mid   m-mid
      :end   m-end

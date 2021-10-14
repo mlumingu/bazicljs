@@ -229,8 +229,13 @@
 
 
 
-(defn natal-pillars [date no-hour]
-  (let [solar     (if no-hour (bc/gregorian-to-solar-ymd date) (bc/gregorian-to-solar date))
+(defn natal-pillars [date no-hour date-info]
+  (let [day-info   (:day date-info)
+        d-weekday  (:weekday day-info)
+        d-off-12   (:off-12 day-info)
+        d-const-28 (:const-28 day-info)
+
+        solar     (if no-hour (bc/gregorian-to-solar-ymd date) (bc/gregorian-to-solar date))
         stems     (take-nth 2 solar)
         branches  (take-nth 2 (rest solar))
         slugs     (bc/natal-slugs date)
@@ -255,6 +260,13 @@
                        )
 
         dp        (if no-hour (first n-pillars) (second n-pillars))
+        dp        (merge dp {:weekday  d-weekday
+                             :off-12   d-off-12
+                             :const-28 d-const-28})
+
+        n-pillars (if no-hour
+                    (cons dp (rest n-pillars))
+                    (concat [(first n-pillars) dp] (drop 2 n-pillars)))
 
         plrs-qi     (pillars-qi n-pillars)
         shas        (calc-sha dp n-pillars bs/shas)
@@ -527,6 +539,9 @@
         end-dates   (map :end days)
         pstart      (map :pstart days)
         pend        (map :pend days)
+        officers    (map :off-12 days)
+        consts      (map :const-28 days)
+        weekdays    (map :weekday days)
 
         pillars     (map :dp days)
         jiazis      (map bu/jiazi-id pillars)        
@@ -548,6 +563,9 @@
                            (repeat :end-date) end-dates
                            (repeat :pstart) pstart
                            (repeat :pend) pend
+                           (repeat :off-12) officers
+                           (repeat :const-28) consts
+                           (repeat :weekday) weekdays
 
                            (repeat :void) voids
                            (repeat :dm) (repeat (:stem dp))
@@ -609,8 +627,8 @@
 
 
 (defn chart [date is-male no-hour]
-  (let [natal      (natal-pillars date no-hour)
-        date-info  (bc/date-info date no-hour)
+  (let [date-info  (bc/date-info date no-hour)
+        natal      (natal-pillars date no-hour date-info)
         life       (life-pillars natal date-info)
         luck       (luck-pillars date is-male natal)
         g-scores   (god-scores natal)

@@ -32,6 +32,14 @@
 
 (def STEM-FROM-BRANCH [8 5  0 1 4  3 2 5  6 7 4  9])
 
+(def OFFICERS ["Establish" "Remove" "Full" "Balance" "Stable" "Initiate"
+               "Destruction" "Danger" "Success" "Receive" "Open" "Close"])
+
+(def CONSTELLATIONS ["Horn" "Neck" "Foundation" "House" "Hearth" "Tail" "Basket"
+                     "Dipper" "Ox" "Weaving Maiden" "Void" "Danger" "Room" "Wall"
+                     "Astrid" "Mound" "Stomach" "Pleiades" "Net" "Beak" "Orion"
+                     "Well" "Ghost" "Willow" "Star" "Bow" "Wing" "Carriage"])
+
 
 (defn rel [rtype ids idtype pairs? & {:keys [element] :or {element nil}}]
   {:rtype rtype :ids ids :idtype idtype :pairs? pairs? :element element})

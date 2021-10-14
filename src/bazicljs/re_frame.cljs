@@ -17,7 +17,7 @@
  (fn [_ [_ date-fields]]
    {:db {:calendar-loaded? true
          :current-tab      :score
-         :settings         {:Nayin false
+         :settings         {:Nayin true
                             :Hidden-stems true
                             :Sha true
                             :Natal-qi-stages false
@@ -30,7 +30,8 @@
                             :Branch-qi-stage false
                             :Hstems-qi-stage true
                             :Pillar-qi false
-                            :Stem-branch-names false}
+                            :Stem-branch-names false
+                            :Off-12-const-28 true}
          :date-fields       date-fields
          }}))
 
