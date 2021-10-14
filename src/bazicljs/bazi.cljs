@@ -342,21 +342,21 @@
 (defn life-pillars [n-pillars date-info]
   (let [dp (day-pillar n-pillars)
         mp (month-pillar n-pillars)
-        hp (hour-pillar n-pillars)
+        no-hour (:no-hour date-info)
+        hp (if no-hour nil (hour-pillar n-pillars))
         yp (year-pillar n-pillars)
 
         [cas cab] (ca-palace dp)
         [cs cb]   (c-palace mp)
-        [ls lb]   (l-palace yp mp hp date-info)
+        [ls lb]   (if no-hour [nil nil] (l-palace yp mp hp date-info))
 
-        stems     [cs cas ls]
-        branches  [cb cab lb]
+        stems     (if no-hour [cs cas] [cs ls cas])
+        branches  (if no-hour [cb cab] [cb lb cab])
+        slugs     (if no-hour ["conception" "conc aura"] ["conception" "life" "con aura"])
+        palaces   (if no-hour [:c :ca][:c :li :ca])
+        
         jiazis    (map bu/jiazi-id (jiazis stems branches))
-
         voids     (map (partial bu/is-void? (:jiazi dp)) branches)
-
-        slugs     ["conception" "con aura" "life"]
-        palaces   [:c :ca :li]
 
         l-pillars (map hash-map
                        (repeat :id)     palaces
@@ -610,7 +610,7 @@
 
 (defn chart [date is-male no-hour]
   (let [natal      (natal-pillars date no-hour)
-        date-info  (bc/date-info date)
+        date-info  (bc/date-info date no-hour)
         life       (life-pillars natal date-info)
         luck       (luck-pillars date is-male natal)
         g-scores   (god-scores natal)

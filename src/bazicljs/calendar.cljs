@@ -145,7 +145,7 @@
     ))
 
 
-(defn date-info [dt]
+(defn date-info [dt no-hour]
   (let [y (first (drop-while #(not (time/after? (:end %) dt)) @cal2))
         m (first (drop-while #(not (time/after? (:end %) dt)) (:months y)))
         d (first (drop-while #(not (time/after? (:end %) dt)) (:days m)))
@@ -156,7 +156,8 @@
      :month m
      :day d
      :date dt
-     :born-after-zhong born-after-zhong}
+     :born-after-zhong born-after-zhong
+     :no-hour no-hour}
     ))
 
 
