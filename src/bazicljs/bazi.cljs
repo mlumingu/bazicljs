@@ -275,10 +275,12 @@
 
 (defn day-pillar [n-pillars]
   (first (filter #(= (% :palace) :D) n-pillars)))
-
-
 (defn month-pillar [n-pillars]
   (first (filter #(= (% :palace) :M) n-pillars)))
+(defn hour-pillar [n-pillars]
+  (first (filter #(= (% :palace) :H) n-pillars)))
+(defn year-pillar [n-pillars]
+  (first (filter #(= (% :palace) :Y) n-pillars)))
 
 
 (defn calc-sha-rel-qi [dp pillars t-pillars st-pillars]
@@ -315,21 +317,46 @@
     (nth ps 51)))
 
 
-(defn life-pillars [n-pillars]
+(defn l-palace [{ys :stem} {mb :branch} {hb :branch} {born-after-zhong :born-after-zhong}]
+  (let [ys1 (+ 1 ys)
+        mb1 (+ 1 mb)
+        hb1 (+ 1 hb)
+
+        adder (if born-after-zhong 1 0)
+        
+        lb (- 32 (+ mb1 hb1 adder))
+        lb1 (+ 1 (rem (- lb 1) 12))
+
+        mb-zi-chou (< mb1 3)
+        subtractor (if mb-zi-chou 0 2)
+        
+        ls (- (+ (* ys1 2) lb1) subtractor)
+        ls1 (+ 1 (rem (- ls 1) 10))
+
+        ls2 (- ls1 1)
+        lb2 (- lb1 1)
+        ]
+    [ls2 lb2]))
+
+
+(defn life-pillars [n-pillars date-info]
   (let [dp (day-pillar n-pillars)
         mp (month-pillar n-pillars)
+        hp (hour-pillar n-pillars)
+        yp (year-pillar n-pillars)
 
         [cas cab] (ca-palace dp)
         [cs cb]   (c-palace mp)
+        [ls lb]   (l-palace yp mp hp date-info)
 
-        stems     [cs cas]
-        branches  [cb cab]
+        stems     [cs cas ls]
+        branches  [cb cab lb]
         jiazis    (map bu/jiazi-id (jiazis stems branches))
 
         voids     (map (partial bu/is-void? (:jiazi dp)) branches)
 
-        slugs     ["conception" "con aura"]
-        palaces   [:c :ca]
+        slugs     ["conception" "con aura" "life"]
+        palaces   [:c :ca :li]
 
         l-pillars (map hash-map
                        (repeat :id)     palaces
@@ -445,6 +472,7 @@
     (pillars-to-map y-pillars)
     ))
 
+
 (defn month-pillars [y-pillar]
   (let [nl-pillars  (y-pillar :nl-pillars)
         st-pillars  [y-pillar]
@@ -486,6 +514,7 @@
         m-pillars    (map merge m-pillars sha-rels-qi)
         ]
     (pillars-to-map m-pillars)))
+
 
 (defn day-pillars [m-pillar]
   (let [nl-pillars  (m-pillar :nl-pillars)
@@ -581,7 +610,8 @@
 
 (defn chart [date is-male no-hour]
   (let [natal      (natal-pillars date no-hour)
-        life       (life-pillars natal)
+        date-info  (bc/date-info date)
+        life       (life-pillars natal date-info)
         luck       (luck-pillars date is-male natal)
         g-scores   (god-scores natal)
         e-scores   (element-scores g-scores)
@@ -599,7 +629,8 @@
      :elem-scores   e-scores
      :strong-weak-scores sw-scores
      :usefull-elem usefull-elem
-     :dm dm}))
+     :dm dm
+     :date-info date-info}))
 
 
 ;;(def dd (time/date-time 1990 9 6 23 10))

@@ -290,11 +290,12 @@
     (rf/dispatch [:app/initialize (if uri-qm uri-fields now-date-fields)])
     (mount-root)
     (go
-      (let [;;c (:body (<! (http/get "calendar.json")))
-            c2 (:body (<! (http/get "calendar2.json")))]
-        ;;(reset! cal/cal c)
-        (cal/loadcal! c2)
+      (let [c3 (:body (<! (http/get "newcal.json")))]
+        (reset! cal/jiazi-offset -2)
+        (reset! cal/const-offset 0)
+        (cal/loadcal! c3 -24 14)        
         (rf/dispatch [:calendar-loaded])
         (println "calendar loaded")
-        (calculate! (if uri-qm uri-fields now-date-fields))))))
+        (calculate! (if uri-qm uri-fields now-date-fields))
+        ))))
 

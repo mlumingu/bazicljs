@@ -1,5 +1,7 @@
 (ns bazicljs.calendar
   (:require
+   [bazicljs.bazi-util :as bu]
+   
    [cljs-http.client :as http]
    [cljs-time.core :as time]
    [cljs-time.coerce :as ctime]   
@@ -7,8 +9,12 @@
    [clojure.set :refer [map-invert]]
    ))
 
-(def cal (atom nil))
+
+
+
 (def cal2 (atom nil))
+(def jiazi-offset (atom nil))
+(def const-offset (atom nil))
 
 
 (defn parse-time [dt]
@@ -24,36 +30,13 @@
           12)]))
 
 
-(defn gen-days [first-dp m-start]
-  (let [end1   (time/plus (time/at-midnight m-start) (time/days 1))
-        ends   (iterate #(time/plus % (time/days 1)) end1)
-        starts (cons m-start ends)
-        dps    (iterate next-pillar first-dp)
-        days   (map hash-map (repeat :start) starts (repeat :end) ends (repeat :dp) dps)
-        ]
-    days))
-
-
-(defn parse-month [m1 m2]
-  (let [m-start (parse-time (first m1))
-        m-end   (parse-time (first m2))
-        mst     (m1 1)
-        mbr     (m1 2)
-        dst     (m1 3)
-        dbr     (m1 4)
-        days    (gen-days [dst dbr] m-start)]
-    {:start m-start
-     :end   m-end
-     :mp    [mst mbr]
-     :days  days}))
-
-
 (defn floor-to-year [dt]
   (time/floor dt time/year))
 (defn floor-to-month [dt]
   (time/floor dt time/month))
 (defn compare-date [d1 d2]
   (- (ctime/to-long d1) (ctime/to-long d2)))
+
 
 (defn map-months [ms]
   (->> ms
@@ -62,32 +45,76 @@
        (map #(vector %2 %1) ms)
        (into (sorted-map-by compare-date))))
 
-(defn map-years [ys]
-  (->> ys
-       (map :start)
-       (map floor-to-year)
-       (map #(vector %2 %1) ys)
-       (into (sorted-map-by compare-date))))
 
-(defn parse-year [y1 y2]
-  (let [y-start    (parse-time (first y1))
-        y-end      (parse-time (first y2))
-        tail-m     [(first y2)]
-        ms         (conj (y1 3) tail-m)
-        p-ms       (map parse-month ms (rest ms))
+(defn gen-days [first-dp m-start m-mid m1-const]
+  (let [end1   (time/plus (time/at-midnight m-start) (time/days 1))
+        ends   (iterate #(time/plus % (time/days 1)) end1)
+        starts (cons m-start ends)
+        dps    (iterate next-pillar first-dp)
+        consts (iterate #(+ 1 %)  m1-const)
+        consts (map #(rem % 28) consts)]
+    (map hash-map
+         (repeat :start) starts
+         (repeat :end) ends
+         (repeat :dp) dps
+         (repeat :const) consts
+         )))
+
+
+(defn parse-month [[m1-start m1-mid m1-d-jiazi m1-const] m2 m-jz]
+  (let [m-start (parse-time m1-start)
+        m-mid   (parse-time m1-mid)
+        m-end   (parse-time (first m2))
+        
+        mst     (bu/jiazi-stem m-jz)
+        mbr     (bu/jiazi-branch m-jz)
+
+        d-jz    (rem (+ m1-d-jiazi @jiazi-offset) 60)
+        d-const (rem (+ m1-const @const-offset) 28)
+        
+        dst     (bu/jiazi-stem d-jz)
+        dbr     (bu/jiazi-branch d-jz)
+        
+        days    (gen-days [dst dbr] m-start m-mid m1-const)]
+    {:start m-start
+     :mid   m-mid
+     :end   m-end
+     :mp    [mst mbr]
+     :days    days
+     }))
+
+
+(defn jiazi-iter [start-jz jz-inc]
+  (->> (iterate #(+ jz-inc %) start-jz)
+       (map #(rem % 60))))
+
+
+(defn parse-year [y1-ms y2-ms y-jz m-jz]
+  (let [y1-start   (parse-time (first (first y1-ms)))
+        y1-end     (parse-time (first (first y2-ms)))
+        tail-m     (first y2-ms)
+        ms         (conj y1-ms tail-m)
+        m-jzs      (jiazi-iter m-jz 1)
+        p-ms       (map parse-month ms (rest ms) m-jzs)
         ms-map     p-ms
-        ;;ms-map     (map-months p-ms)
-        yst        (y1 1)
-        ybr        (y1 2)]
-    {:start  y-start
-     :end    y-end
+        yst        (bu/jiazi-stem y-jz)
+        ybr        (bu/jiazi-branch y-jz)]
+    {:start  y1-start
+     :end    y1-end
      :yp     [yst ybr]
-     :months ms-map}))
+     :months ms-map
+     }))
 
-(defn loadcal! [cal]
-  (->> (map parse-year cal (rest cal))
-       ;;(map-years)
-       (reset! cal2)))
+
+(defn gen-cal [cal start-y-jz start-m-jz]
+  (map parse-year
+       cal
+       (rest cal)
+       (jiazi-iter start-y-jz 1)
+       (jiazi-iter start-m-jz 12)))
+
+
+(defn loadcal! [cal start-y-jz start-m-jz]  (reset! cal2 (gen-cal cal start-y-jz start-m-jz)))
 
 
 (defn get-from-cal [cal floor-func minus-func dt]
@@ -115,6 +142,21 @@
         [ms mb] (:mp m)
         [ds db] (:dp d)]
     [ds db ms mb ys yb]
+    ))
+
+
+(defn date-info [dt]
+  (let [y (first (drop-while #(not (time/after? (:end %) dt)) @cal2))
+        m (first (drop-while #(not (time/after? (:end %) dt)) (:months y)))
+        d (first (drop-while #(not (time/after? (:end %) dt)) (:days m)))
+        month-mid (:mid m)
+        born-after-zhong (time/after? dt month-mid)]
+    [y m d born-after-zhong]
+    {:year y
+     :month m
+     :day d
+     :date dt
+     :born-after-zhong born-after-zhong}
     ))
 
 

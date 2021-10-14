@@ -280,6 +280,10 @@
 
 (defn jiazi-id [[sid bid]]
   (+ sid (* 10 (/ (mod (- sid bid) 12) 2))))
+(defn jiazi-stem [jiazi]
+  (rem jiazi 10))
+(defn jiazi-branch [jiazi]
+  (rem jiazi 12))
 
 
 (defn void-branches [jiazi-id]
