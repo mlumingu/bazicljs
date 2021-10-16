@@ -93,7 +93,7 @@
    :justify-content :center
    :gap "0.2em"})
 
-(defclass nayin [element col]
+(defclass nayin [col element]
   {:background-color (element-colors element)
    :color "black"
    :font-size "0.6em"

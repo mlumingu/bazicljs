@@ -163,7 +163,7 @@
 
 (defn nayin [{jiazi :jiazi} col]
   (let [{:keys [element description]} (bu/nayin (quot jiazi 2))]
-    [:div {:class [(styles/grid-base) (styles/nayin element col)]} description]))
+    [:div {:class [(styles/grid-base) (styles/nayin col element)]} description]))
 
 (defn off-12-const-28 [{off-12 :off-12 const-28 :const-28 palace :palace weekday :weekday} col]
   (if (contains? #{:d :D} palace)
@@ -246,7 +246,7 @@
        ]
       )]])
 
-(map bu/STEM-NAMES (bu/god-stems 3))
+
 (defn god-scores [{dm :dm g-scores :god-scores}]
   (let [norm-score  (norm-scores g-scores)
         sids        (bu/god-stems dm)
