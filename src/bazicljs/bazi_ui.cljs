@@ -335,7 +335,7 @@
         current-tab @(rf/subscribe [:current-tab])]
     (case current-tab
       :score [scores chart]
-      :life  [pillars1 (:life-pillars chart) true]
+      :life  [:div [:p [:i "Warning: this is an experimental feature. The calculation might not be correct."]] [pillars1 (:life-pillars chart) true]]
       :l     [pillars1 (vals (:l chart)) true]
       :y     [pillars1 (vals (:y chart)) true]
       :m     [pillars1 (vals (:m chart)) true]
@@ -365,3 +365,4 @@
         ]
 
        [tabs]])))
+{}
