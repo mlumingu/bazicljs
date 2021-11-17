@@ -330,25 +330,23 @@
 
 
 (defn l-palace [{ys :stem} {mb :branch} {hb :branch} {born-after-zhong :born-after-zhong}]
-  (let [ys1 (+ 1 ys)
-        mb1 (+ 1 mb)
-        hb1 (+ 1 hb)
-
-        adder (if born-after-zhong 1 0)
+  (let [lb (mod (+ (- 5 mb hb) 24) 12)
+        ls0 (mod ys 5)
+        lb0 (if (> lb 1) (- lb 2) lb)
+        ls (mod (+ (* 2 ls0) 2 lb0) 10)
         
-        lb (- 32 (+ mb1 hb1 adder))
-        lb1 (+ 1 (rem (- lb 1) 12))
-
-        mb-zi-chou (< mb1 3)
-        subtractor (if mb-zi-chou 0 2)
-        
-        ls (- (+ (* ys1 2) lb1) subtractor)
-        ls1 (+ 1 (rem (- ls 1) 10))
-
-        ls2 (- ls1 1)
-        lb2 (- lb1 1)
         ]
-    [ls2 lb2]))
+    [ls lb]))
+
+
+(defn b-palace [{ys :stem} {mb :branch} {hb :branch} {born-after-zhong :born-after-zhong}]
+  (let [lb (mod (+ 1 mb hb) 12)
+        ls0 (mod ys 5)
+        lb0 (if (> lb 1) (- lb 2) lb)
+        ls (mod (+ (* 2 ls0) 2 lb0) 10)
+        
+        ]
+    [ls lb]))
 
 
 (defn life-pillars [n-pillars date-info]
@@ -361,11 +359,12 @@
         [cas cab] (ca-palace dp)
         [cs cb]   (c-palace mp)
         [ls lb]   (if no-hour [nil nil] (l-palace yp mp hp date-info))
+        [bs bb]   (if no-hour [nil nil] (b-palace yp mp hp date-info))
 
-        stems     (if no-hour [cs cas] [cs ls cas])
-        branches  (if no-hour [cb cab] [cb lb cab])
-        slugs     (if no-hour ["conception" "conc aura"] ["conception" "life" "con aura"])
-        palaces   (if no-hour [:c :ca][:c :li :ca])
+        stems     (if no-hour [cs cas] [cs ls bs cas])
+        branches  (if no-hour [cb cab] [cb lb bb cab])
+        slugs     (if no-hour ["conception" "conc aura"] ["conception" "life" "body" "con aura"])
+        palaces   (if no-hour [:c :ca][:c :li :b :ca])
         
         jiazis    (map bu/jiazi-id (jiazis stems branches))
         voids     (map (partial bu/is-void? (:jiazi dp)) branches)
