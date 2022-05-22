@@ -92,28 +92,38 @@
 (defn symbol-str [s]
   (str (rest (str s))))
 
+(contains? #{1 2} 3)
+
+(defn relation-palace-name [rel pillar]
+  (let [s-or-b (:idtype rel)
+        element (bu/branch-element (s-or-b pillar))
+        name (:palace pillar)
+        ]
+    [:span
+     " "
+     [:span {:class (styles/relation (styles/element-colors element))} name]]))
 
 (defn relations [rels]
-  (for [[i {:keys [rtype palaces element]}] (map-indexed vector rels)]
+  (for [[i {:keys [rtype palaces pillars element rel]}] (map-indexed vector rels)]
     ^{:key i}
-    [:div {:class (styles/relation (if element  (styles/element-colors element)))}
-     (str (name rtype) " " (string/join " " (map name palaces)))]))
+    [:div
+     [:span {:class (styles/relation (if element  (styles/element-colors element)))}
+      (str (name rtype))]
+     (for [pillar pillars] ^{:key (:palace pillar)} (relation-palace-name rel pillar))
+     ]))
 
-(defn n-relations [{ss :cshas rels :n-relations} col]
+(defn n-relations [{ rels :n-relations} col]
   [:div {:class [(styles/grid-base) (styles/sha col)]}
-   (concat
-    (relations rels)
-    (for [[i name] (map-indexed vector ss)]
-      ^{:key (str i "s")} [:div name]))
+   (relations rels)
    ])
 
 (defn p-relations [{rels :p-relations} col]
   [:div {:class [(styles/grid-base)(styles/relations col)]} (relations rels)])
 
 
-(defn shas [{ss :shas} col]
+(defn shas [{ss :shas css :cshas} col]
   [:div {:class [(styles/grid-base)(styles/sha col)]}
-   (for [[i name] (map-indexed vector ss)]
+   (for [[i name] (map-indexed vector (concat ss css))]
      ^{:key i} [:div name])])
 
 

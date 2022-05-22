@@ -24,13 +24,14 @@
     (concat m (rest n))))
 
 
+
 (defn relation-instances [relation pillars]
   (letfn [(instance [rel pillar]
-            {:rtype (:rtype rel) :palaces (list (:palace pillar)) :element (:element rel)}
+            {:rtype (:rtype rel) :palaces (list (:palace pillar)) :pillars (list pillar) :element (:element rel) :rel relation}
             )]
     (if (:pairs? relation)
       (map (partial instance relation) pillars)
-      (list {:rtype (:rtype relation) :palaces (map :palace pillars) :element (:element relation)}))))
+      (list {:rtype (:rtype relation) :palaces (map :palace pillars) :pillars pillars :element (:element relation) :rel relation}))))
 
 
 (defn full-relation [pillar pillars relation]
@@ -51,14 +52,15 @@
       )))
 
 
-
 (defn relation [pillar pillars relation]
   (let [idtype (:idtype relation)
         id     (idtype pillar)
         rids   (:ids relation)
         id-in-r (some #{id} rids)]
     (if id-in-r
-      (let [other-rids (into #{} (remove-one id rids))
+      (let [other-rids (if (:pairs? relation)
+                         (into #{} (remove-one id rids))
+                         rids)
             matches (filter #(some #{(idtype %)} other-rids)  pillars)
             groups (group-by idtype matches)
             found-rids (into #{} (keys groups))
@@ -79,8 +81,10 @@
         id-in-r (some #{id} rids)
         ]
     (if id-in-r
-      (let [other-rids (into #{} (remove-one id rids))
-            matches (filter #(some #{(idtype %)} rids)  pillars)
+      (let [other-rids (if (:pairs? relation)
+                         (into #{} (remove-one id rids))
+                         rids)
+            matches (filter #(some #{(idtype %)} other-rids)  pillars)
             groups (group-by idtype matches)
             found-rids (into #{} (keys groups))
 
@@ -113,7 +117,7 @@
     (mapcat (partial relation p ps) relations)))
 
 (defn relations-w-nlps [rels pillars pillar]
-  (mapcat (partial relation pillar pillars) rels))
+  (mapcat (partial relation-w-nlps pillar pillars) rels))
 
 
 
