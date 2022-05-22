@@ -50,7 +50,7 @@
         )
       ()
       )))
-
+(cs/difference #{1 2} #{1})
 
 (defn relation [pillar pillars relation]
   (let [idtype (:idtype relation)
@@ -64,8 +64,15 @@
             matches (filter #(some #{(idtype %)} other-rids)  pillars)
             groups (group-by idtype matches)
             found-rids (into #{} (keys groups))
-            full-relation? (= found-rids other-rids)]
-        (if (not-empty found-rids)
+            full-relation? (= found-rids other-rids)
+            pair-and-not-empty (and
+                                (:pairs? relation)
+                                (not-empty found-rids))
+            combo-and-has-others (and
+                                  (not (:pairs? relation))
+                                  (not-empty (cs/difference found-rids #{id})))
+            ]
+        (if (or pair-and-not-empty combo-and-has-others)
           (relation-instances relation matches))
         )
       ()
@@ -92,8 +99,16 @@
             
             all-pillars (cons pillar matches)
             nl-pillars (filter #(some #{(:palace %)} bu/nl-palace-keys) all-pillars)
-            has-nl-ps (seq nl-pillars)]
-        (if (and  (not-empty found-rids) has-nl-ps)
+            has-nl-ps (seq nl-pillars)
+            pair-and-not-empty (and
+                                (:pairs? relation)
+                                (not-empty found-rids))
+            combo-and-has-others (and
+                                  (not (:pairs? relation))
+                                  (not-empty (cs/difference found-rids #{id})))
+            ]
+        (if (and has-nl-ps
+                 (or pair-and-not-empty combo-and-has-others))
           (relation-instances relation matches))
         )
       ()

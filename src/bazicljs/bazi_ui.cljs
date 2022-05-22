@@ -96,7 +96,10 @@
 
 (defn relation-palace-name [rel pillar]
   (let [s-or-b (:idtype rel)
-        element (bu/branch-element (s-or-b pillar))
+        id (s-or-b pillar)
+        element (if (= s-or-b :stem)
+                  (bu/stem-element id)
+                  (bu/branch-element id))
         name (:palace pillar)
         ]
     [:span
