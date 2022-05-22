@@ -208,6 +208,8 @@
              [:option {:value :usefull} "(Un)useful"]
              [:option {:value :none} "None"]
              ]]
+
+           [checkbox :Harmony-branch-color settings "Harmony as branch color"]
            [checkbox :Off-12-const-28 settings "Weekday - 12 Officers - 28 Constellations (experimental)"]
            [settings-spacer]
            

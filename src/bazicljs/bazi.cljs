@@ -33,7 +33,7 @@
       (list {:rtype (:rtype relation) :palaces (map :palace pillars) :element (:element relation)}))))
 
 
-(defn relation [pillar pillars relation]
+(defn full-relation [pillar pillars relation]
   (let [idtype (:idtype relation)
         id     (idtype pillar)
         rids   (:ids relation)
@@ -52,7 +52,27 @@
 
 
 
-(defn relation3 [pillar pillars relation]
+(defn relation [pillar pillars relation]
+  (let [idtype (:idtype relation)
+        id     (idtype pillar)
+        rids   (:ids relation)
+        id-in-r (some #{id} rids)]
+    (if id-in-r
+      (let [other-rids (into #{} (remove-one id rids))
+            matches (filter #(some #{(idtype %)} other-rids)  pillars)
+            groups (group-by idtype matches)
+            found-rids (into #{} (keys groups))
+            full-relation? (= found-rids other-rids)]
+        (if (not-empty found-rids)
+          (relation-instances relation matches))
+        )
+      ()
+      )))
+
+
+
+(defn relation-w-nlps [pillar pillars relation]
+  ;; relation with natal or luck pillars in it
   (let [idtype (:idtype relation)
         id     (idtype pillar)
         rids   (:ids relation)
@@ -69,7 +89,7 @@
             all-pillars (cons pillar matches)
             nl-pillars (filter #(some #{(:palace %)} bu/nl-palace-keys) all-pillars)
             has-nl-ps (seq nl-pillars)]
-        (if (and  full-relation has-nl-ps)
+        (if (and  (not-empty found-rids) has-nl-ps)
           (relation-instances relation matches))
         )
       ()
@@ -83,20 +103,20 @@
     (map (partial separate-at coll) (range (count coll)))))
 
 
-(defn relations2 [rels pillars pillar]
-  (mapcat (partial relation pillar pillars) rels))
 
-(defn h-relations2 [rels pillars pillar]
-  (mapcat (partial relation3 pillar pillars) rels))
-
-(defn h-relations [relations pillars]
+(defn full-relations [relations pillars]
   (for [[p ps] (separate-all pillars)]
-    (mapcat (partial relation3 p ps) relations)))
-
+    (mapcat (partial full-relation p ps) relations)))
 
 (defn relations [relations pillars]
   (for [[p ps] (separate-all pillars)]
     (mapcat (partial relation p ps) relations)))
+
+(defn relations-w-nlps [rels pillars pillar]
+  (mapcat (partial relation pillar pillars) rels))
+
+
+
 
 
 (defn jiazis [stems branches]
@@ -227,6 +247,14 @@
 (defn pillars-qi [pillars]
   (for [p pillars] (into [] (rest (stems-qi false p p)))))
 
+(defn br-harmony [br]
+  (filter #(contains? (:ids %) br) bu/three-harmonies))
+
+(defn branch-harmonies [brs]
+  (->> brs
+       (map br-harmony)
+       (map first)
+       (map :element)))
 
 
 (defn natal-pillars [date no-hour date-info]
@@ -247,6 +275,7 @@
         d-jiazi   (if no-hour (first jiazis) (second jiazis))
         dm        (if no-hour (first stems) (second stems))
         voids     (map (partial bu/is-void? d-jiazi) branches)
+        harmonies (branch-harmonies branches)
         
         n-pillars (map hash-map
                        (repeat :id)     palaces
@@ -257,6 +286,7 @@
                        (repeat :palace) palaces
                        (repeat :void)   voids
                        (repeat :dm) (repeat dm)
+                       (repeat :harmony) harmonies
                        )
 
         dp        (if no-hour (first n-pillars) (second n-pillars))
@@ -272,8 +302,9 @@
         shas        (calc-sha dp n-pillars bs/shas)
         n-rels      (relations bu/neg-relations n-pillars)
         p-pair-rels (relations bu/pos-relations n-pillars)
-        p-hars      (h-relations bu/pos-natal-harmonies n-pillars)
-        p-rels      (map concat p-pair-rels p-hars)
+        p-hars      (relations bu/pos-natal-harmonies n-pillars)
+        cross-hars  (full-relations bu/cross-harmonies n-pillars)        
+        p-rels      (map concat p-pair-rels p-hars cross-hars)
         qi-stages   (map (partial pillars-stems-qi n-pillars) n-pillars)
         all         (map hash-map
                          (repeat :pillar-qi) plrs-qi
@@ -297,9 +328,9 @@
 
 (defn calc-sha-rel-qi [dp pillars t-pillars st-pillars]
   (let [all-pillars (concat pillars st-pillars)
-        n-rels      (map (partial relations2 bu/neg-relations pillars) t-pillars)
-        p-pair-rels (map (partial relations2 bu/pos-relations pillars) t-pillars)
-        p-hars      (map (partial h-relations2 bu/pos-harmonies all-pillars) t-pillars)
+        n-rels      (map (partial relations-w-nlps bu/neg-relations pillars) t-pillars)
+        p-pair-rels (map (partial relations-w-nlps bu/pos-relations pillars) t-pillars)
+        p-hars      (map (partial relations-w-nlps bu/pos-harmonies all-pillars) t-pillars)
         p-rels      (map concat p-pair-rels p-hars)
         shas        (calc-sha dp t-pillars bs/shas)
         cshas       (calc-sha dp t-pillars bs/cshas)
@@ -368,16 +399,18 @@
         
         jiazis    (map bu/jiazi-id (jiazis stems branches))
         voids     (map (partial bu/is-void? (:jiazi dp)) branches)
+        harmonies (branch-harmonies branches)        
 
         l-pillars (map hash-map
-                       (repeat :id)     palaces
-                       (repeat :stem)   stems
-                       (repeat :branch) branches
-                       (repeat :jiazi)  jiazis
-                       (repeat :slug)   slugs
-                       (repeat :palace) palaces
-                       (repeat :void)   voids
-                       (repeat :dm) (repeat (:stem dp))
+                       (repeat :id)      palaces
+                       (repeat :stem)    stems
+                       (repeat :branch)  branches
+                       (repeat :jiazi)   jiazis
+                       (repeat :slug)    slugs
+                       (repeat :palace)  palaces
+                       (repeat :void)    voids
+                       (repeat :dm)      (repeat (:stem dp))
+                       (repeat :harmony) harmonies                       
                        )
 
         sha-rels-qi  (calc-sha-rel-qi dp n-pillars l-pillars [])
@@ -413,6 +446,7 @@
         start-years  (map #(time/year %) start-dates)
 
         slugs        (map str start-ages (repeat " - ") start-years)
+        harmonies (branch-harmonies branches)        
         
         l-pillars    (map hash-map
                           (repeat :id)   start-ages
@@ -430,7 +464,9 @@
                           (repeat :void) voids
                           (repeat :dm) (repeat (:stem dp))
                           (repeat :n-pillars) (repeat n-pillars)
-                          (repeat :t-pillars) (repeat []))
+                          (repeat :t-pillars) (repeat [])
+                          (repeat :harmony) harmonies                                               
+                          )
 
         sha-rels-qi  (calc-sha-rel-qi dp n-pillars l-pillars [])
         
@@ -458,6 +494,7 @@
         slugs       (map time/year start-dates)
         ids         (map #(ftime/unparse (ftime/formatter "yyyy-MM-dd") %) start-dates)
         voids       (map (partial bu/is-void? (:jiazi dp)) branches)
+        harmonies (branch-harmonies branches)        
 
         y-pillars   (map hash-map
                          (repeat :id)  ids
@@ -475,6 +512,7 @@
                          (repeat :dm) (repeat (:stem dp))
                          (repeat :nl-pillars) (repeat nl-pillars)
                          (repeat :t-pillars) (repeat [])
+                         (repeat :harmony) harmonies                                                                        
                          )
 
         sha-rels-qi  (calc-sha-rel-qi dp nl-pillars y-pillars [])
@@ -502,6 +540,7 @@
         slugs       (map time/month start-dates)
         ids         (map #(ftime/unparse (ftime/formatter "yyyy-MM-dd") %) start-dates)
         voids       (map (partial bu/is-void? (:jiazi dp)) branches)
+        harmonies (branch-harmonies branches)        
         
         m-pillars   (map hash-map
                          (repeat :id)  ids
@@ -519,6 +558,7 @@
                          (repeat :dm) (repeat (:stem dp))
                          (repeat :nl-pillars) (repeat nl-pillars)
                          (repeat :st-pillars) (repeat st-pillars)
+                         (repeat :harmony) harmonies                                                                        
                          )
 
         sha-rels-qi  (calc-sha-rel-qi dp nl-pillars m-pillars st-pillars)
@@ -550,6 +590,7 @@
         voids       (map (partial bu/is-void? (:jiazi dp)) branches)
 
         slugs       (map #(ftime/unparse (ftime/formatter "M-d") %) start-dates)
+        harmonies (branch-harmonies branches)        
         
         d-pillars     (map hash-map
                            (repeat :id) ids
@@ -570,6 +611,7 @@
                            (repeat :dm) (repeat (:stem dp))
                            (repeat :nl-pillars) (repeat nl-pillars)
                            (repeat :st-pillars) (repeat st-pillars)
+                           (repeat :harmony) harmonies
                            )
 
         sha-rels-qi  (calc-sha-rel-qi dp nl-pillars d-pillars st-pillars)
@@ -599,6 +641,7 @@
         slugs       (map #(ftime/unparse (ftime/formatter "HH:mm") %) start-dates)
         ids         (map #(ftime/unparse (ftime/formatter "yyyy-MM-dd HH:mm") %) start-dates)
         voids       (map (partial bu/is-void? (:jiazi dp)) branches)
+        harmonies   (branch-harmonies branches)
         
         h-pillars   (map hash-map
                          (repeat :id) ids
@@ -616,6 +659,7 @@
                          (repeat :dm) (repeat (:stem dp))
                          (repeat :nl-pillars) (repeat nl-pillars)
                          (repeat :st-pillars) (repeat st-pillars)
+                         (repeat :harmony) harmonies                         
                          )
 
         sha-rels-qi  (calc-sha-rel-qi dp nl-pillars h-pillars st-pillars)

@@ -44,14 +44,17 @@
      (if pillar-qi [:div {:class (styles/palace-qi)} st-qi])]))
 
 
-(defn branch [{bid :branch dm :dm void :void} col]
-  (let [element (bu/branch-element bid)
-        usefulls @(rf/subscribe [:usefull-elem])
-        usefull (usefulls element)
-        bg-setting (:palace-bg @(rf/subscribe [:settings]))
-        b-names    (:Stem-branch-names @(rf/subscribe [:settings]))
-        b-name     (bu/BRANCH-NAMES bid)
-        bg-style (palace-bg-style bg-setting element usefull false)]
+(defn branch [{bid :branch dm :dm void :void harmony :harmony} col]
+  (let [element      (bu/branch-element bid)
+        usefulls     @(rf/subscribe [:usefull-elem])
+        harmony-bc   (:Harmony-branch-color @(rf/subscribe [:settings]))
+        element      (if harmony-bc harmony element)
+        usefull      (usefulls element)
+        bg-setting   (:palace-bg @(rf/subscribe [:settings]))
+        b-names      (:Stem-branch-names @(rf/subscribe [:settings]))
+        b-name       (bu/BRANCH-NAMES bid)
+        bg-style     (palace-bg-style bg-setting element usefull false)
+        ]
     [:div {:class [(styles/palace col) bg-style]}
      (bu/BRANCH-HTML bid)
      (if b-names [:div {:class (styles/palace-names)} b-name])

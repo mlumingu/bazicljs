@@ -31,6 +31,7 @@
                             :Hstems-qi-stage true
                             :Pillar-qi false
                             :Stem-branch-names false
+                            :Harmony-branch-color false
                             :Off-12-const-28 true}
          :date-fields       date-fields
          }}))

@@ -79,19 +79,27 @@
                     (rel :s-pun [6 6] :branch true)
                     (rel :s-pun [9 9] :branch true)
                     (rel :s-pun [11 11] :branch true)
-                    
+
+                    (rel :s-clash #{0 6} :stem true)
+                    (rel :s-clash #{1 7} :stem true)
+                    (rel :s-clash #{2 8} :stem true)
+                    (rel :s-clash #{3 9} :stem true)
                     ])
 
-(def pos-harmonies
+(def three-harmonies
   [(rel :harmony #{2 6 10} :branch false :element 1)
    (rel :harmony #{8 0 4} :branch false :element 4)
    (rel :harmony #{11 3 7} :branch false :element 0)
-   (rel :harmony #{5 9 1} :branch false :element 3)
+   (rel :harmony #{5 9 1} :branch false :element 3)])
 
-   (rel :d-combo #{2 3 4} :branch false :element 0)
+(def d-harmonies
+  [(rel :d-combo #{2 3 4} :branch false :element 0)
    (rel :d-combo #{5 6 7} :branch false :element 1)
    (rel :d-combo #{8 9 10} :branch false :element 3)
    (rel :d-combo #{11 0 1} :branch false :element 4)])
+
+;;(def pos-harmonies (concat three-harmonies d-harmonies))
+(def pos-harmonies (concat three-harmonies d-harmonies))
 
 (def s-combos
   [(rel :s-combo #{0 5} :stem true :element 2)
@@ -110,10 +118,15 @@
 
 (def pos-relations (concat s-combos b-combos))
 
-(def pos-natal-harmonies (concat pos-harmonies
-                                 [(rel :ls-cross #{0 6 9 3} :branch false)
-                                  (rel :al-cross #{1 7 10 4} :branch false)
-                                  (rel :t-cross #{2 5 8 11} :branch false)]))
+
+
+(def cross-harmonies
+  [(rel :ls-cross #{0 6 9 3} :branch false)
+   (rel :al-cross #{1 7 10 4} :branch false)
+   (rel :t-cross #{2 5 8 11} :branch false)])
+
+;;(def pos-natal-harmonies (concat pos-harmonies cross-harmonies))
+(def pos-natal-harmonies (concat pos-harmonies))
 
 
 (defn hidden-stems [branch]
